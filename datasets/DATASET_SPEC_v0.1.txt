@@ -35,7 +35,17 @@ Core features:
 - accessibility_score
 - vehicle_type
 - disruption_proxy
+- label_type
+- label_source
+- label_derivation_method
+
+Label provenance contract:
+- label_type is required and must be one of: observed, derived, synthetic.
+- observed means the target label is directly recorded as a real-world operational observation from an identified source; label_source must identify that source and label_derivation_method must be "direct_observation".
+- derived means the target label is computed from one or more real/public signals because direct ground-truth labels are unavailable; label_source must identify the input data sources and label_derivation_method must describe the deterministic derivation rule.
+- synthetic means the target label is generated for testing, simulation, or augmentation rather than observed from a real event; label_source must identify the generator or simulation source and label_derivation_method must describe the generation rule.
+- label_source and label_derivation_method must not be left ambiguous or represented as observed when the label is derived or synthetic.
 
 Important:
 disruption_proxy is a derived prototype label, not a claim of observed road closure.
-Real observations and derived/synthetic data must remain distinguishable.
+Real observations, derived labels, and synthetic labels must remain distinguishable through the label provenance fields above.
