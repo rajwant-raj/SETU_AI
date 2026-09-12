@@ -1,0 +1,2 @@
+latitude,longitude,timestamp,precipitation_mm,wind_speed_kmh,wind_gust_kmh,temperature_c,humidity_pct,weather_code
+26.1445,91.7362,2026-01-01T00:00:00Z,12.4,14.2,22.1,18.5,82,61

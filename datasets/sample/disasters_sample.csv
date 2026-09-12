@@ -1,0 +1,2 @@
+event_id,event_type,timestamp,latitude,longitude,severity
+EV-001,landslide,2026-01-01T00:00:00Z,26.20,91.80,3

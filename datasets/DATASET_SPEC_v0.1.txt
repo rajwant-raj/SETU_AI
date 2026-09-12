@@ -1,0 +1,41 @@
+SETU NER Risk Dataset v0.1
+
+Target geography:
+Guwahati -> Imphal corridor
+
+Primary objective:
+Predict a disruption proxy for a road/network segment.
+
+Primary target:
+disruption_proxy
+
+Data sources:
+1. OpenStreetMap / Overpass
+2. Open-Meteo historical weather
+3. GDACS disaster/event data
+
+Core features:
+- segment_id
+- timestamp
+- latitude
+- longitude
+- elevation_m
+- road_type
+- segment_length_km
+- precipitation_mm
+- wind_speed_kmh
+- wind_gust_kmh
+- temperature_c
+- humidity_pct
+- weather_code
+- nearby_disaster_count
+- nearest_disaster_distance_km
+- disaster_type
+- disaster_severity
+- accessibility_score
+- vehicle_type
+- disruption_proxy
+
+Important:
+disruption_proxy is a derived prototype label, not a claim of observed road closure.
+Real observations and derived/synthetic data must remain distinguishable.

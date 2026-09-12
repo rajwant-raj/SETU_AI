@@ -1,0 +1,1 @@
+segment_id,timestamp,latitude,longitude,elevation_m,road_type,segment_length_km,precipitation_mm,wind_speed_kmh,wind_gust_kmh,temperature_c,humidity_pct,weather_code,nearby_disaster_count,nearest_disaster_distance_km,disaster_type,disaster_severity,accessibility_score,vehicle_type,disruption_proxy

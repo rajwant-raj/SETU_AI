@@ -1,0 +1,2 @@
+segment_id,timestamp,latitude,longitude,elevation_m,road_type,segment_length_km
+RS-001,2026-01-01T00:00:00Z,26.1445,91.7362,55.0,primary,4.2
