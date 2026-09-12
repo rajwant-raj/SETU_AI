@@ -125,7 +125,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Accessibility scoring | ✅ COMPLETE | 10 | Deterministic OSM-derived infrastructure accessibility proxy; dynamic evidence normalization; 44 Accessibility tests passing |
 | ETA / delay engine | ✅ COMPLETE | 11 | Deterministic baseline ETA + disruption delay engine; 60 ETA tests passing; 188 total tests passing; compileall passed; git diff --check passed; zero new external dependencies; no external routing/traffic services; no ML/LLM/RAG integration; deviation audit PASS |
 | Thin Digital Twin Foundation | ✅ COMPLETE | 12 | Thin state-based/simulation-oriented foundation; operational state + deterministic events + isolated what-if scenarios; composes existing Network Impact, Accessibility, ETA, and Risk engines; 23 Digital Twin tests passing; 211 total tests passing; compileall passed; git diff --check passed; zero new dependencies/services; deviation audit PASS |
-| Route candidate generation | ⏳ PENDING | — | Generate alternatives |
+| Route candidate generation | ✅ COMPLETE | 13 | Deterministic in-memory graph construction + Yen's K-shortest simple paths algorithm; strictly physical distance cost; explicit blocked segment exclusion; 17 route candidate tests passing; 228 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
 | Route ranking | ⏳ PENDING | — | Compare ETA, risk, accessibility, distance, vehicle fit |
 | Explanation output | ⏳ PENDING | — | Operational reasons, not opaque scores |
 | Human-approval recommendation contract | ⏳ PENDING | — | Recommendation → approve/reject → reroute |
@@ -157,9 +157,9 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 12 — Thin Digital Twin Foundation complete**
+**Checkpoint 13 — Route Candidate Generation complete**
 
-Completed:
+Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
 - Strict entity validation and referential integrity
 - Deterministic event layer implemented with required event_id, event_type, timestamp, and payload
@@ -181,11 +181,32 @@ Completed:
 - Zero new external dependencies introduced for Checkpoint 12
 - No databases, Redis, Kafka, brokers, WebSockets, API servers, ML, LLM, RAG, or routing algorithms introduced
 
+Completed (Checkpoint 13 — Route Candidate Generation):
+- Deterministic in-memory graph construction from normalized OSM road segment endpoints
+- Coordinate quantization keying (`N_{lat:.6f}_{lon:.6f}`) preventing arbitrary road merging
+- Endpoints treated as bidirectional per normalized OSM data limitations, explicitly documented
+- Nearest-node resolution via deterministic haversine great-circle distance
+- Yen's K-shortest simple paths algorithm implemented using Python standard library only
+- Path cost strictly physical network distance (`sum(segment_length_km)`)
+- Zero ranking formulas, risk scores, accessibility scores, ETAs, weather weights, or recommendation scores
+- Candidate records expose route_id, segment_ids, node_ids, origin_node, destination_node, total_distance_km, segment_count, geometry, and preserved segment metadata
+- Deterministic candidate ordering by total distance, segment count, segment ID sequence, and node sequence
+- Explicit blocked_segment_ids exclusion without treating Network Impact's "potentially affected" segments as automatically blocked
+- Strict input validation rejecting empty networks, malformed segments, invalid coordinates, invalid k, malformed blocked_segment_ids, and disconnected origin/destination
+- Caller segment dictionaries preserved without mutation
+- 17 route candidate tests passing across all 14 required areas
+- 228 total tests passing across repository
+- compileall passed
+- git diff --check passed
+- Zero new external dependencies introduced for Checkpoint 13
+- Zero external routing APIs (no Mapbox, OSRM, Google Maps, or remote services)
+- No ML, GA/PSO, databases, Kafka, Redis, or background services
+
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 13 — Route Candidate Generation
+Checkpoint 14 — Route Ranking
 
 ---
 
