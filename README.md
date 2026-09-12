@@ -57,21 +57,36 @@ This repository is being developed separately from the MERN application so the i
 - Historical weather exploration/cache for **2019–2024** at 40 representative weather points
 - Live-weather module scaffold using the Open-Meteo Forecast API
 - Reproducible data-processing scripts kept in Git
-- Risk Engine v0.1 specification
-- Deterministic Risk Engine v0.1 implementation with automated tests
+- Risk Engine v0.1 specification and deterministic implementation
+- Network Impact Engine
+- Accessibility Scoring
+- Deterministic ETA / Delay Engine
+- Thin Digital Twin Foundation
+
+### Deterministic intelligence status
+
+The completed intelligence layers currently provide:
+
+- **Network Impact:** maps geolocated incidents to potentially affected network segments; affected does not automatically mean confirmed closure.
+- **Accessibility:** provides an OSM-derived infrastructure accessibility proxy; it is not observed real-time passability.
+- **ETA / Delay:** provides deterministic baseline and disruption-aware travel-time estimates; it does not claim traffic-ground-truth accuracy.
+- **Digital Twin:** provides a thin, state-based, event-driven, simulation-oriented in-memory foundation that composes the existing intelligence engines without introducing a database, broker, physics simulator, or separate service.
 
 ### Next deterministic-intelligence work
 
-These remain intentionally unbuilt until their preceding deterministic components are ready:
+The next approved sequence is:
 
-- network impact engine
-- accessibility scoring
-- ETA/delay engine
-- route generation/ranking
-- GA/PSO optimization
-- ML training/evaluation
-- explanation service
-- FastAPI integration with the MERN backend
+1. Route Candidate Generation
+2. Route Ranking
+3. Explanation
+4. Incident → Reroute demonstration
+5. Live weather
+6. ML dataset
+7. ML training and evaluation
+8. ML inference
+9. MERN integration and polish
+
+Checkpoint 13 — Route Candidate Generation is currently **PENDING**.
 
 ## Repository structure
 
@@ -331,11 +346,44 @@ Do not force-add large generated data artifacts unless the project plan explicit
 
 ## Current next step
 
-After the data-foundation checkpoint and Risk Engine v0.1:
+Current AI repository checkpoint:
 
-1. Verify the live weather module.
-2. Build the network impact engine.
-3. Add accessibility, ETA and route ranking around the deterministic intelligence core.
-4. Only then construct the final ML training dataset and train/evaluate the disruption model.
+**Checkpoint 12 — Thin Digital Twin Foundation COMPLETE**
 
-This order keeps SETU aligned with the original SIH26002 blueprint and preserves a defensible, explainable prototype.
+Next approved checkpoint:
+
+**Checkpoint 13 — Route Candidate Generation**
+
+SETU_AI deterministic execution order:
+
+```text
+Risk Engine
+    ↓
+Network Impact
+    ↓
+Accessibility
+    ↓
+ETA / Delay
+    ↓
+Thin Digital Twin
+    ↓
+Route Candidate Generation
+    ↓
+Route Ranking
+    ↓
+Explanation
+    ↓
+Incident → Reroute demonstration
+    ↓
+Live Weather
+    ↓
+ML Dataset
+    ↓
+ML Training / Evaluation
+    ↓
+ML Inference
+    ↓
+MERN Integration / Polish
+```
+
+This sequence preserves the original SIH26002 product flow: deterministic intelligence first, the Incident → Reroute loop before advanced ML, and human approval before operational action.
