@@ -1,17 +1,41 @@
-# SETU
+# SETU-AI
 
-AI-Based Smart Logistics and Accessibility Intelligence Platform for the North Eastern Region (NER).
+SETU Intelligence Engine for resilient transportation and logistics.
 
-## SIH Problem Statement
+## Core intelligence pipeline
 
-SIH26002
+Incident
+    ?
+Network Impact
+    ?
+Risk Assessment
+    ?
+Accessibility
+    ?
+Route Alternatives
+    ?
+Route Optimization
+    ?
+Explanation
+    ?
+Human Approval
+    ?
+Reroute
 
-## Architecture
+## Modules
 
-- Backend: FastAPI
-- Database: MongoDB
-- GIS/Routing: OpenStreetMap + OSRM
-- ML: XGBoost / scikit-learn
-- Web: React + Vite + Tailwind + MapLibre GL JS
-- Mobile: React PWA
-- Authentication: JWT
+- risk: disruption and risk scoring
+- impact: affected network analysis
+- eta: travel-time and delay estimation
+- routing: candidate route generation and ranking
+- optimization: GA/PSO optimization experiments
+- explanation: recommendation explanation
+- common: shared schemas, utilities and configuration
+- api: service interface for SETU backend integration
+
+## Project structure
+
+src/             Intelligence implementation
+datasets/        Training, sample and processed data
+evaluation/      Model and algorithm evaluation
+tests/           Automated tests

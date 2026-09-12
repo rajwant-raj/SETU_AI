@@ -1,0 +1,70 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 8c8887b..e69de29 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -1,41 +0,0 @@[m
+[31m-# Environment[m
+[31m-.env[m
+[31m-.env.*[m
+[31m-!.env.example[m
+[31m-[m
+[31m-# Python[m
+[31m-__pycache__/[m
+[31m-*.py[cod][m
+[31m-.pytest_cache/[m
+[31m-.mypy_cache/[m
+[31m-.venv/[m
+[31m-venv/[m
+[31m-[m
+[31m-# Node[m
+[31m-node_modules/[m
+[31m-dist/[m
+[31m-build/[m
+[31m-.vite/[m
+[31m-[m
+[31m-# IDE[m
+[31m-.vscode/[m
+[31m-.idea/[m
+[31m-[m
+[31m-# OS[m
+[31m-.DS_Store[m
+[31m-Thumbs.db[m
+[31m-[m
+[31m-# Logs[m
+[31m-*.log[m
+[31m-[m
+[31m-# ML artifacts[m
+[31m-*.pkl[m
+[31m-*.joblib[m
+[31m-[m
+[31m-# Local databases / data[m
+[31m-mongodb-data/[m
+[31m-redis-data/[m
+[31m-[m
+[31m-# Temporary files[m
+[31m-tmp/[m
+[31m-temp/[m
+\ No newline at end of file[m
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 13d9278..e69de29 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -1,17 +0,0 @@[m
+[31m-# SETU[m
+[31m-[m
+[31m-AI-Based Smart Logistics and Accessibility Intelligence Platform for the North Eastern Region (NER).[m
+[31m-[m
+[31m-## SIH Problem Statement[m
+[31m-[m
+[31m-SIH26002[m
+[31m-[m
+[31m-## Architecture[m
+[31m-[m
+[31m-- Backend: FastAPI[m
+[31m-- Database: MongoDB[m
+[31m-- GIS/Routing: OpenStreetMap + OSRM[m
+[31m-- ML: XGBoost / scikit-learn[m
+[31m-- Web: React + Vite + Tailwind + MapLibre GL JS[m
+[31m-- Mobile: React PWA[m
+[31m-- Authentication: JWT[m
+\ No newline at end of file[m

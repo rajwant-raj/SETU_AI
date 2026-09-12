@@ -1,21 +1,21 @@
-# Environment
-.env
-.env.*
-!.env.example
-
 # Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
 .venv/
 venv/
+env/
 
-# Node
-node_modules/
-dist/
-build/
-.vite/
+# Environment files
+.env
+.env.*
+!.env.example
 
 # IDE
 .vscode/
@@ -25,17 +25,20 @@ build/
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
+# Data artifacts
+datasets/raw/*
+datasets/processed/*
+!datasets/raw/.gitkeep
+!datasets/processed/.gitkeep
 
-# ML artifacts
+# Model artifacts
 *.pkl
 *.joblib
+*.onnx
+*.pt
+*.pth
+models/
 
-# Local databases / data
-mongodb-data/
-redis-data/
-
-# Temporary files
-tmp/
-temp/
+# Logs
+*.log
+logs/
