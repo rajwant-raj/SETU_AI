@@ -1,13 +1,10 @@
 import json
 from pathlib import Path
-from urllib.request import Request, urlopen
 from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
-# Broad prototype corridor:
-# Guwahati -> Imphal
-# We intentionally keep this bounded for the first dataset version.
 SOUTH = 24.50
 WEST = 90.90
 NORTH = 27.90
@@ -20,7 +17,7 @@ QUERY = f"""
     {SOUTH},{WEST},{NORTH},{EAST}
   );
 );
-out tags center;
+out tags geom;
 """
 
 output_path = Path("datasets/raw/osm/guwahati_imphal_roads.json")
@@ -34,9 +31,12 @@ request = Request(
 )
 
 with urlopen(request, timeout=240) as response:
-    data = json.load(response)
+    data = json.loads(response.read().decode("utf-8"))
 
-with output_path.open("w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2)
+output_path.write_text(
+    json.dumps(data),
+    encoding="utf-8",
+)
 
-print(f"Saved {len(data.get('elements', []))} road ways to {output_path}")
+print(f"Downloaded OSM ways: {len(data.get('elements', []))}")
+print(f"Saved: {output_path}")
