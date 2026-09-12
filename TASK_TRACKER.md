@@ -126,8 +126,9 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | ETA / delay engine | ✅ COMPLETE | 11 | Deterministic baseline ETA + disruption delay engine; 60 ETA tests passing; 188 total tests passing; compileall passed; git diff --check passed; zero new external dependencies; no external routing/traffic services; no ML/LLM/RAG integration; deviation audit PASS |
 | Thin Digital Twin Foundation | ✅ COMPLETE | 12 | Thin state-based/simulation-oriented foundation; operational state + deterministic events + isolated what-if scenarios; composes existing Network Impact, Accessibility, ETA, and Risk engines; 23 Digital Twin tests passing; 211 total tests passing; compileall passed; git diff --check passed; zero new dependencies/services; deviation audit PASS |
 | Route candidate generation | ✅ COMPLETE | 13 | Deterministic in-memory graph construction + Yen's K-shortest simple paths algorithm; strictly physical distance cost; explicit blocked segment exclusion; 17 route candidate tests passing; 228 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
+| Route ranking | ✅ COMPLETE | 14 | Deterministic candidate route ranking; candidate-set min-max utility normalization; ETA, risk, accessibility, distance, vehicle profile compatibility proxy; 25 route ranking tests passing; 253 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
 | Explanation output | ✅ COMPLETE | 15 | Deterministic structured explanation of route ranking results; 5 decision factors (ETA, risk, accessibility, distance, vehicle profile compatibility proxy); comparative tradeoffs; risk reason preservation; honesty disclosures; 17 explanation tests passing; 270 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
-| Human-approval recommendation contract | ⏳ PENDING | — | Recommendation → approve/reject → reroute |
+| Human-approval recommendation contract | ✅ COMPLETE | 16 | Deterministic incident-to-reroute orchestration; Network Impact, Route Candidate Generation, Route Ranking, and Route Explanation composed; potentially affected ≠ confirmed blocked; explicit blocked_segment_ids only; recommendation remains pending human approval; operational route changes only after explicit approval; Digital Twin route_changed event semantics preserved; 25 incident reroute tests passing; 295 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
 
 ### ML / EVALUATION
 
@@ -146,9 +147,9 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Item | Status | Notes |
 |---|---|---|
 | MERN backend intelligence boundary | ⏳ LATER | Stable API boundary after core intelligence behavior stabilizes |
-| Incident → impact → risk loop | ⏳ PENDING | Main decision-support loop |
-| Alternative route recommendation | ⏳ PENDING | Main demo behavior |
-| Human approval → reroute | ⏳ PENDING | Operator remains in control |
+| Incident → impact → risk loop | ✅ COMPLETE | Main decision-support loop; validated in Checkpoint 16 |
+| Alternative route recommendation | ✅ COMPLETE | Main demo behavior; validated in Checkpoint 16 |
+| Human approval → reroute | ✅ COMPLETE | Operator remains in control; validated in Checkpoint 16 |
 | Live tracking integration | ⏳ LATER | Socket.IO / simulated telemetry in MERN |
 | Offline field workflow | ⏳ LATER | Small queued incident sync; not a large native app |
 
@@ -156,7 +157,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 15 — Explanation complete**
+**Checkpoint 16 — Incident → Reroute demo loop complete**
 
 Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
@@ -241,11 +242,36 @@ Completed (Checkpoint 15 — Explanation):
 - Zero external routing/explanation APIs (no LLMs, OpenAI, Mapbox, OSRM, or remote services)
 - No ML, GA/PSO, databases, Kafka, Redis, or background services
 
+Completed (Checkpoint 16 — Incident → Reroute demo loop):
+- Deterministic incident-to-reroute orchestration layer composing Network Impact, Route Candidate Generation, Route Ranking, Route Explanation, and Digital Twin state/events
+- Network Impact reused without formula duplication; evaluates potentially affected segments within incident impact radius
+- Potentially affected ≠ confirmed blocked semantic rule strictly enforced; segments never automatically blocked from incident severity, radius, weather, risk, or heuristics
+- Explicit confirmed_blocked_segment_ids only are excluded from alternative route generation
+- Route Candidate Generation reused; physical distance cost only
+- Route Ranking reused; normalized utility model with approved proportional weights
+- Route Explanation reused; structured decision factors, comparative tradeoffs, and honesty disclosures
+- Recommendation produced in PENDING_APPROVAL status with approval_required=True
+- Operational route remains unchanged during recommendation creation (side-effect free)
+- Explicit approval function (approve_reroute_recommendation) requires non-empty operator identifier and PENDING_APPROVAL state
+- Operational route updated only after explicit approval; applies Digital Twin route_changed event and updates status to REROUTED
+- Explicit rejection function (reject_reroute_recommendation) transitions status to REJECTED without modifying state
+- Approval cannot happen twice; non-pending states rejected
+- Disconnection/no-alternative-route handled honestly without inventing fake routes
+- Strict input validation rejecting malformed incidents, disconnected endpoints, and non-existent blocked IDs
+- Caller input immutability preserved
+- 25 incident reroute tests passing across all 25 required areas
+- 295 total tests passing across repository
+- compileall passed
+- git diff --check passed
+- Zero new external dependencies introduced for Checkpoint 16
+- Zero external routing/explanation/traffic APIs (no Mapbox, OSRM, Google Maps, or remote services)
+- No ML, GA/PSO, databases, Kafka, Redis, or background services
+
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 16 — Incident → Reroute demo loop
+Checkpoint 17 — Live weather integration into risk
 
 ---
 
