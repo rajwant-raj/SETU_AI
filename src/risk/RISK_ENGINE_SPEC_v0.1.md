@@ -202,7 +202,14 @@ Tests must cover at minimum:
    current_delay_ratio=0
    → LOW / score 0
    (Note: literal all-zero raw inputs produce 30.0 / MEDIUM because accessibility and road-condition scores are inverted)
-2. all-one risk inputs → CRITICAL / score 100
+2. maximum-risk inputs:
+   incident_severity=1,
+   weather_severity=1,
+   network_criticality=1,
+   current_delay_ratio=1,
+   accessibility_score=0,
+   road_condition_score=0
+   → CRITICAL / score 100
 3. accessibility and road-condition inversion
 4. each risk-band boundary
 5. clamping of normalized values
