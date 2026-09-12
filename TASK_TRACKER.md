@@ -122,7 +122,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Risk Engine implementation | ✅ COMPLETE | 8 | Deterministic weighted risk engine implemented and tested |
 | Phase 8 review fixes | ✅ COMPLETE | 8R | README/spec synchronization, label provenance, OSM geometry retention, weather cache validation, risk-spec correction, immutable weights |
 | Network Impact Engine | ✅ COMPLETE | 9 | Deterministic local spatial impact engine; geometry-aware segment proximity; 46 Network Impact tests passing |
-| Accessibility scoring | ⏳ PENDING | — | Route/segment accessibility |
+| Accessibility scoring | ✅ COMPLETE | 10 | Deterministic OSM-derived infrastructure accessibility proxy; dynamic evidence normalization; 44 Accessibility tests passing |
 | ETA / delay engine | ⏳ PENDING | — | Baseline ETA + disruption delay |
 | Route candidate generation | ⏳ PENDING | — | Generate alternatives |
 | Route ranking | ⏳ PENDING | — | Compare ETA, risk, accessibility, distance, vehicle fit |
@@ -156,26 +156,29 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 9 — Network Impact Engine complete**
+**Checkpoint 10 — Accessibility Scoring complete**
 
 Completed:
-- Deterministic Network Impact Engine implemented
-- Geometry-aware point-to-segment proximity using local OSM segment geometry
-- Strict incident and segment coordinate validation
-- Zero-radius and boundary behavior tested
-- Deterministic ordering and metadata preservation tested
-- 46 Network Impact tests passing
-- 81 total tests passing
+- Deterministic accessibility scoring implemented
+- OSM-derived infrastructure accessibility proxy documented honestly
+- Dynamic evidence normalization over observed attributes
+- Missing optional attributes are never fabricated
+- Immutable accessibility policy weights
+- Deterministic accessibility bands and explainable reason codes
+- Fractional lane values rejected
+- Recorded maxspeed treated as a proxy signal
+- 44 Accessibility tests passing
+- 125 total tests passing
 - compileall passed
 - git diff --check passed
 - No external services or new dependencies
-- No Risk/Accessibility/ETA/Routing/ML/backend integration introduced
+- No Risk/ETA/Routing/ML/backend integration introduced
 
 Deviation audit:
 PASS
 
 Next approved task:
-Accessibility scoring
+ETA / delay engine
 
 ---
 
