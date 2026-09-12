@@ -100,7 +100,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ---
 
-## 4. Current Project State — 2026-09-12
+## 4. Current Project State — 2026-09-13
 
 ### DATA FOUNDATION
 
@@ -123,7 +123,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Phase 8 review fixes | ✅ COMPLETE | 8R | README/spec synchronization, label provenance, OSM geometry retention, weather cache validation, risk-spec correction, immutable weights |
 | Network Impact Engine | ✅ COMPLETE | 9 | Deterministic local spatial impact engine; geometry-aware segment proximity; 46 Network Impact tests passing |
 | Accessibility scoring | ✅ COMPLETE | 10 | Deterministic OSM-derived infrastructure accessibility proxy; dynamic evidence normalization; 44 Accessibility tests passing |
-| ETA / delay engine | ⏳ PENDING | — | Baseline ETA + disruption delay |
+| ETA / delay engine | ✅ COMPLETE | 11 | Deterministic baseline ETA + disruption delay engine; 60 ETA tests passing; 188 total tests passing; compileall passed; git diff --check passed; zero new external dependencies; no external routing/traffic services; no ML/LLM/RAG integration; deviation audit PASS |
 | Route candidate generation | ⏳ PENDING | — | Generate alternatives |
 | Route ranking | ⏳ PENDING | — | Compare ETA, risk, accessibility, distance, vehicle fit |
 | Explanation output | ⏳ PENDING | — | Operational reasons, not opaque scores |
@@ -156,29 +156,31 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 10 — Accessibility Scoring complete**
+**Checkpoint 11 — ETA / Delay Engine complete**
 
 Completed:
-- Deterministic accessibility scoring implemented
-- OSM-derived infrastructure accessibility proxy documented honestly
-- Dynamic evidence normalization over observed attributes
-- Missing optional attributes are never fabricated
-- Immutable accessibility policy weights
-- Deterministic accessibility bands and explainable reason codes
-- Fractional lane values rejected
-- Recorded maxspeed treated as a proxy signal
-- 44 Accessibility tests passing
-- 125 total tests passing
+- Deterministic baseline ETA + disruption delay engine implemented
+- OSM-derived infrastructure speed hierarchy proxies with surface and vehicle multipliers
+- Uncapped delay ratio + normalized delay ratio calibrated for Risk Engine v0.1
+- Blocked segment handling with `DEFAULT_BLOCKED_SEGMENT_PENALTY_SECONDS` (7200.0s)
+- Degenerate 0.0 km segment support (producing 0.0s ETA and 0.0s delay)
+- Fallback endpoint coordinate distance derivation via haversine
+- Strict rejection of conflicting disruption representations with no implicit precedence
+- Immutable policy mapping proxies (`DEFAULT_SPEED_LIMITS_KMH`, `DEFAULT_SURFACE_MODIFIERS`, `DEFAULT_VEHICLE_PROFILES`)
+- Output honesty disclosure explicitly documenting infrastructure speed proxies
+- Direct end-to-end integration test with Risk Engine v0.1 passing
+- 60 ETA tests passing
+- 188 total tests passing
 - compileall passed
 - git diff --check passed
-- No external services or new dependencies introduced for Checkpoint 10
-- No Risk/ETA/Routing/ML/backend integration introduced
+- Zero new external dependencies introduced for Checkpoint 11
+- No external routing/traffic services, ML, LLM, or backend integration introduced
 
 Deviation audit:
 PASS
 
 Next approved task:
-ETA / delay engine
+Checkpoint 12 — Thin Digital Twin Foundation
 
 ---
 
@@ -196,6 +198,8 @@ Network Impact
 Accessibility
         ↓
 ETA / Delay
+        ↓
+Thin Digital Twin Foundation
         ↓
 Route Candidates
         ↓
@@ -215,6 +219,8 @@ ML inference service
         ↓
 MERN integration / polish
 ```
+
+> **Thin Digital Twin Foundation:** Thin state-based/simulation-oriented foundation that composes existing network, incident, risk, accessibility, ETA, shipment, and vehicle state without duplicating intelligence engines.
 
 This order intentionally keeps the deterministic system ahead of ML, matching the blueprint.
 
@@ -250,4 +256,4 @@ A task is **not complete** until:
 
 ### Last updated
 
-2026-09-12
+2026-09-13
