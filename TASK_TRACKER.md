@@ -129,6 +129,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Route ranking | ✅ COMPLETE | 14 | Deterministic candidate route ranking; candidate-set min-max utility normalization; ETA, risk, accessibility, distance, vehicle profile compatibility proxy; 25 route ranking tests passing; 253 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
 | Explanation output | ✅ COMPLETE | 15 | Deterministic structured explanation of route ranking results; 5 decision factors (ETA, risk, accessibility, distance, vehicle profile compatibility proxy); comparative tradeoffs; risk reason preservation; honesty disclosures; 17 explanation tests passing; 270 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
 | Human-approval recommendation contract | ✅ COMPLETE | 16 | Deterministic incident-to-reroute orchestration; Network Impact, Route Candidate Generation, Route Ranking, and Route Explanation composed; potentially affected ≠ confirmed blocked; explicit blocked_segment_ids only; recommendation remains pending human approval; operational route changes only after explicit approval; Digital Twin route_changed event semantics preserved; 25 incident reroute tests passing; 295 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
+| Live weather integration into risk | ✅ COMPLETE | 17 | Deterministic live weather adapter; strict WMO & continuous input validation; piecewise scoring; length-weighted route aggregation; batched Open-Meteo cache/fallback with machine-readable state (LIVE, CACHED, NOMINAL_FALLBACK); 22 weather integration tests passing; 317 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero test network calls; deviation audit PASS |
 
 ### ML / EVALUATION
 
@@ -138,9 +139,10 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | `disruption_proxy` label | ⏳ LATER | Derived prototype label; never claim it as observed road-closure ground truth |
 | Logistic Regression baseline | ⏳ LATER | First ML baseline |
 | Random Forest comparison | ⏳ LATER | Compare against baseline |
-| XGBoost | ⏳ LATER | Only if justified |
-| Time-aware evaluation | ⏳ LATER | Precision, recall, F1, ROC-AUC |
-| ML inference service | ⏳ LATER | FastAPI only after model + deterministic system are ready |
+| LightGBM baseline | ⏳ LATER | Structured tabular benchmark |
+| Temporal CV split | ⏳ LATER | Train: 2019-01-01 to 2023-06-30, Val: 2023-07-01 to 2023-12-31, Test: 2024-01-01 to 2024-12-31 |
+| Spatial-holdout evaluation | ⏳ LATER | Evaluate on unseen roads/coordinates |
+| Decision-layer integration | ⏳ LATER | Connect model outputs back to operational decisions |
 
 ### INTEGRATION / PRODUCT LOOP
 
@@ -157,7 +159,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 16 — Incident → Reroute demo loop complete**
+**Checkpoint 17 — Live Weather Integration into Risk complete**
 
 Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
@@ -267,11 +269,34 @@ Completed (Checkpoint 16 — Incident → Reroute demo loop):
 - Zero external routing/explanation/traffic APIs (no Mapbox, OSRM, Google Maps, or remote services)
 - No ML, GA/PSO, databases, Kafka, Redis, or background services
 
+Completed (Checkpoint 17 — Live Weather Integration into Risk):
+- Deterministic pure weather adapter converting normalized Open-Meteo current weather observations into weather_severity in [0.0, 1.0]
+- Exact deterministic WMO code mapping table covering clear, fog, drizzle, rain, freezing rain, snow, showers, and convective thunderstorms (severe thunderstorm WMO 99 = 1.0)
+- Strict validation via InvalidWeatherInputError rejecting unknown, unsupported, or non-finite WMO codes (never silently treated as clear weather)
+- Strict validation via InvalidWeatherInputError rejecting missing, negative, or non-finite continuous weather variables (precipitation, wind speed, wind gusts)
+- Exact piecewise linear scaling for precipitation (0 mm = 0.0, 50 mm/h = 1.0), wind speed (0 km/h = 0.0, 100 km/h = 1.0), and wind gusts (0 km/h = 0.0, 130 km/h = 1.0)
+- Explicit combination rule: Base = 0.35*WMO + 0.35*Precip + 0.15*Wind + 0.15*Gust; Peak = max(WMO, Precip, Wind, Gust); Combined = 0.60*Base + 0.40*Peak; strictly clamped to [0.0, 1.0] and rounded to 4 decimals
+- Deterministic spatial lookup mapping segment midpoint coordinates to the nearest weather sampling station via haversine distance
+- Route weather aggregation strictly using length-weighted mean weather severity; no worst-case aggregation
+- Risk Engine contract preservation: weather_severity supplied directly to calculate_risk without modifying Risk Engine weights (0.20), thresholds (0.75 for ADVERSE_WEATHER, 0.50 for MODERATE_WEATHER_RISK), formula, or validation
+- Batched weather retrieval architecture reusing datasets/processed/weather/live_weather.json; never requests Open-Meteo per segment, per route, or per candidate
+- Explicit three-tier fallback state handling exposing machine-readable state: LIVE, CACHED, and NOMINAL_FALLBACK (unverified severity 0.0 with is_live=False and clear honesty disclosure)
+- Strict mode support raising LiveWeatherUnavailableError when verified weather is mandated
+- Zero real network calls in tests; all network interactions mocked/fixtured
+- 22 weather integration tests passing across all required areas
+- 317 total tests passing across repository
+- compileall passed
+- git diff --check passed
+- Zero new external dependencies introduced for Checkpoint 17
+- No changes to src/risk/risk_engine.py
+- No changes to src/routing/route_ranking.py
+- No ML, LLM, RAG, Redis, Kafka, FastAPI, databases, or external routing services
+
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 17 — Live weather integration into risk
+Checkpoint 18 — ML dataset construction
 
 ---
 
