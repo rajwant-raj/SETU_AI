@@ -121,7 +121,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Risk Engine v0.1 specification | ✅ COMPLETE | 7 | Define inputs, weights, thresholds, reasons |
 | Risk Engine implementation | ✅ COMPLETE | 8 | Deterministic weighted risk engine implemented and tested |
 | Phase 8 review fixes | ✅ COMPLETE | 8R | README/spec synchronization, label provenance, OSM geometry retention, weather cache validation, risk-spec correction, immutable weights |
-| Network Impact Engine | ⏳ PENDING | — | Incident → affected segments/shipments |
+| Network Impact Engine | ✅ COMPLETE | 9 | Deterministic local spatial impact engine; geometry-aware segment proximity; 46 Network Impact tests passing |
 | Accessibility scoring | ⏳ PENDING | — | Route/segment accessibility |
 | ETA / delay engine | ⏳ PENDING | — | Baseline ETA + disruption delay |
 | Route candidate generation | ⏳ PENDING | — | Generate alternatives |
@@ -156,36 +156,26 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 8 — Risk Engine v0.1 complete + review fixes**
+**Checkpoint 9 — Network Impact Engine complete**
 
 Completed:
-- Risk specification finalized
-- Internal specification contradiction corrected
-- Deterministic Python implementation completed
-- 34 original Risk Engine tests passed before review fixes
-- Risk policy weights made immutable with a standard-library read-only mapping
-- Added explicit immutability tests
-- README status synchronized with implementation/tracker
-- Dataset label provenance contract added
-- OSM acquisition changed to retain full way geometry; normalization now splits geometry into measurable segments with endpoints and haversine segment lengths
-- Historical weather cache now records and validates sampling-point, date-range and selection configuration plus per-batch integrity metadata
-- Maximum-risk specification case corrected to use accessibility_score=0 and road_condition_score=0 with the other four inputs at 1
-- `.gitignore` was already correct and required no change
+- Deterministic Network Impact Engine implemented
+- Geometry-aware point-to-segment proximity using local OSM segment geometry
+- Strict incident and segment coordinate validation
+- Zero-radius and boundary behavior tested
+- Deterministic ordering and metadata preservation tested
+- 46 Network Impact tests passing
+- 81 total tests passing
+- compileall passed
+- git diff --check passed
+- No external services or new dependencies
+- No Risk/Accessibility/ETA/Routing/ML/backend integration introduced
 
 Deviation audit:
 PASS
 
-Review finding disposition:
-- README risk status — VALID; fixed
-- Dataset label provenance — VALID; fixed
-- OSM geometry retention — VALID; fixed, including the downstream normalization required to use geometry
-- Weather cache configuration validation — VALID; fixed with a manifest and per-batch integrity checks
-- Maximum-risk specification case — VALID; fixed
-- Immutable WEIGHTS — VALID; fixed and tested
-- `.env` ignore rules — ALREADY SATISFIED; `.gitignore` already contained `.env`, `.env.*`, `!.env.example`, plus the requested environment/cache/log/generated-artifact exclusions; no unnecessary change made
-
 Next approved task:
-Network Impact Engine
+Accessibility scoring
 
 ---
 
