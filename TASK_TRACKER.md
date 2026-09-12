@@ -118,8 +118,8 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 | Item | Status | Checkpoint | Notes |
 |---|---|---:|---|
-| Risk Engine v0.1 specification | ⏭️ NEXT | — | Define inputs, weights, thresholds, reasons |
-| Risk Engine implementation | ⏳ PENDING | — | Deterministic weighted score first |
+| Risk Engine v0.1 specification | ✅ COMPLETE | 7 | Define inputs, weights, thresholds, reasons |
+| Risk Engine implementation | ✅ COMPLETE | 8 | Deterministic weighted risk engine implemented and tested |
 | Network Impact Engine | ⏳ PENDING | — | Incident → affected segments/shipments |
 | Accessibility scoring | ⏳ PENDING | — | Route/segment accessibility |
 | ETA / delay engine | ⏳ PENDING | — | Baseline ETA + disruption delay |
@@ -155,19 +155,23 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 6 — Weather acquisition foundation complete.**
+**Checkpoint 8 — Risk Engine v0.1 complete**
 
-Current Git commit:
+Completed:
+- Risk specification finalized
+- Internal specification contradiction corrected
+- Deterministic Python implementation completed
+- 34 tests passing
+- Syntax check passed
+- git diff --check passed
+- No new dependencies or external services
+- No ML/LLM/API/routing introduced
 
-```text
-e9f2df8 — data: add weather acquisition pipeline
-```
-
-The tracker itself is now being committed as the next documentation checkpoint.
+Deviation audit:
+PASS
 
 Next approved task:
-
-> **Risk Engine v0.1 specification**
+Network Impact Engine
 
 ---
 

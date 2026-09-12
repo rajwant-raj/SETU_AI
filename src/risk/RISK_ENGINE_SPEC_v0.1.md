@@ -193,7 +193,15 @@ The engine must never:
 
 Tests must cover at minimum:
 
-1. all-zero inputs → LOW / score 0
+1. zero-risk operational baseline:
+   incident_severity=0,
+   weather_severity=0,
+   accessibility_score=1,
+   road_condition_score=1,
+   network_criticality=0,
+   current_delay_ratio=0
+   → LOW / score 0
+   (Note: literal all-zero raw inputs produce 30.0 / MEDIUM because accessibility and road-condition scores are inverted)
 2. all-one risk inputs → CRITICAL / score 100
 3. accessibility and road-condition inversion
 4. each risk-band boundary
