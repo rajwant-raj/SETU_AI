@@ -46,7 +46,7 @@ The blueprint defines three important milestones:
 
 This repository is being developed separately from the MERN application so the intelligence/data work can be prepared cleanly and connected later through a stable API boundary.
 
-## Current status — DATA FOUNDATION
+## Current status — DATA FOUNDATION + DETERMINISTIC INTELLIGENCE
 
 ### Completed
 
@@ -57,12 +57,13 @@ This repository is being developed separately from the MERN application so the i
 - Historical weather exploration/cache for **2019–2024** at 40 representative weather points
 - Live-weather module scaffold using the Open-Meteo Forecast API
 - Reproducible data-processing scripts kept in Git
+- Risk Engine v0.1 specification
+- Deterministic Risk Engine v0.1 implementation with automated tests
 
-### Not started yet
+### Next deterministic-intelligence work
 
-These remain intentionally unbuilt until the deterministic intelligence stage is ready:
+These remain intentionally unbuilt until their preceding deterministic components are ready:
 
-- deterministic risk engine
 - network impact engine
 - accessibility scoring
 - ETA/delay engine
@@ -330,12 +331,11 @@ Do not force-add large generated data artifacts unless the project plan explicit
 
 ## Current next step
 
-After the data-foundation checkpoint:
+After the data-foundation checkpoint and Risk Engine v0.1:
 
 1. Verify the live weather module.
-2. Finish the deterministic intelligence specification.
-3. Build the risk engine first.
-4. Build impact, accessibility, ETA and route ranking around it.
-5. Only then construct the final ML training dataset and train/evaluate the disruption model.
+2. Build the network impact engine.
+3. Add accessibility, ETA and route ranking around the deterministic intelligence core.
+4. Only then construct the final ML training dataset and train/evaluate the disruption model.
 
 This order keeps SETU aligned with the original SIH26002 blueprint and preserves a defensible, explainable prototype.
