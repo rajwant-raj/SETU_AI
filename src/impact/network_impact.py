@@ -28,12 +28,25 @@ class NetworkImpactValidationError(ValueError):
     pass
 
 
+def _normalize_lon_delta_deg(delta_lon: float) -> float:
+    """Normalize a longitude difference in degrees to the [-180.0, 180.0] interval across the antimeridian."""
+    return ((delta_lon + 180.0) % 360.0) - 180.0
+
+
+def _normalize_lon_deg(lon: float) -> float:
+    """Normalize longitude in degrees to [-180.0, 180.0]."""
+    wrapped = ((lon + 180.0) % 360.0) - 180.0
+    if wrapped == -180.0 and lon > 0.0:
+        return 180.0
+    return wrapped
+
+
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Return great-circle distance between two WGS84 coordinates in kilometers."""
     lat1_rad = math.radians(lat1)
     lat2_rad = math.radians(lat2)
     delta_lat = math.radians(lat2 - lat1)
-    delta_lon = math.radians(lon2 - lon1)
+    delta_lon = math.radians(_normalize_lon_delta_deg(lon2 - lon1))
 
     a = (
         math.sin(delta_lat / 2.0) ** 2
@@ -69,11 +82,15 @@ def point_to_segment_distance_km(
     deg_to_rad = math.pi / 180.0
 
     # Incident point P is at origin (0, 0)
+    # Normalize longitude differences across +-180 degrees relative to p_lon
+    delta_s_lon = _normalize_lon_delta_deg(start_lon - p_lon)
+    delta_e_lon = _normalize_lon_delta_deg(end_lon - p_lon)
+
     # A = start, B = end
-    ax = (start_lon - p_lon) * deg_to_rad * EARTH_RADIUS_KM * cos_lat
+    ax = delta_s_lon * deg_to_rad * EARTH_RADIUS_KM * cos_lat
     ay = (start_lat - p_lat) * deg_to_rad * EARTH_RADIUS_KM
 
-    bx = (end_lon - p_lon) * deg_to_rad * EARTH_RADIUS_KM * cos_lat
+    bx = delta_e_lon * deg_to_rad * EARTH_RADIUS_KM * cos_lat
     by = (end_lat - p_lat) * deg_to_rad * EARTH_RADIUS_KM
 
     # Segment vector V = B - A
@@ -94,7 +111,8 @@ def point_to_segment_distance_km(
         return haversine_km(p_lat, p_lon, end_lat, end_lon)
     else:
         closest_lat = start_lat + t * (end_lat - start_lat)
-        closest_lon = start_lon + t * (end_lon - start_lon)
+        delta_seg_lon = _normalize_lon_delta_deg(end_lon - start_lon)
+        closest_lon = _normalize_lon_deg(start_lon + t * delta_seg_lon)
         return haversine_km(p_lat, p_lon, closest_lat, closest_lon)
 
 
@@ -211,7 +229,8 @@ def _calculate_segment_distance(
             m_lon = _validate_longitude("longitude", segment["longitude"])
         else:
             m_lat = (s_lat + e_lat) / 2.0
-            m_lon = (s_lon + e_lon) / 2.0
+            delta_seg_lon = _normalize_lon_delta_deg(e_lon - s_lon)
+            m_lon = _normalize_lon_deg(s_lon + delta_seg_lon / 2.0)
 
         return dist_km, m_lat, m_lon
 
@@ -265,9 +284,16 @@ def assess_network_impact(
     if segments is None:
         raise NetworkImpactValidationError("Expected segments to be an iterable, got None")
 
+    try:
+        segment_iter = iter(segments)
+    except TypeError as exc:
+        raise NetworkImpactValidationError(
+            f"Expected segments to be an iterable, got {type(segments).__name__}"
+        ) from exc
+
     affected_segments: List[Dict[str, Any]] = []
 
-    for seg in segments:
+    for seg in segment_iter:
         if not isinstance(seg, Mapping):
             raise NetworkImpactValidationError(
                 f"Expected each segment to be a mapping/dict, got {type(seg).__name__}"

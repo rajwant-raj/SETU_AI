@@ -171,7 +171,7 @@ Completed:
 - 125 total tests passing
 - compileall passed
 - git diff --check passed
-- No external services or new dependencies
+- No external services or new dependencies introduced for Checkpoint 10
 - No Risk/ETA/Routing/ML/backend integration introduced
 
 Deviation audit:

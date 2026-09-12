@@ -490,3 +490,48 @@ def test_deterministic_repeated_execution(base_incident, synthetic_segments):
         res = assess_network_impact(base_incident, synthetic_segments)
         assert res == baseline
         assert res["affected_segment_ids"] == baseline["affected_segment_ids"]
+
+
+# ==============================================================================
+# Antimeridian & Iterator TypeError Regressions
+# ==============================================================================
+def test_antimeridian_crossing_segment_and_incident():
+    """Incident at longitude 180 and segment crossing 179.9 to -179.9 must have distance ~0 and midpoint near 180."""
+    incident = {
+        "latitude": 0.0,
+        "longitude": 180.0,
+        "incident_type": "hazard",
+        "severity": 0.8,
+        "impact_radius_km": 25.0,
+    }
+    segment = {
+        "segment_id": "SEG-ANTIMERIDIAN-1",
+        "start_latitude": 0.0,
+        "start_longitude": 179.9,
+        "end_latitude": 0.0,
+        "end_longitude": -179.9,
+    }
+    result = assess_network_impact(incident, [segment])
+    assert result["affected_segment_count"] == 1
+    affected = result["affected_segments"][0]
+    assert affected["segment_id"] == "SEG-ANTIMERIDIAN-1"
+    assert math.isclose(affected["distance_km"], 0.0, abs_tol=1e-5)
+    # Midpoint must be near +-180 degrees, NEVER near 0 degrees
+    assert abs(affected["longitude"]) >= 179.0
+    assert not math.isclose(affected["longitude"], 0.0, abs_tol=10.0)
+
+
+def test_non_iterable_segments_raises_network_impact_validation_error(base_incident):
+    """Passing a non-iterable object as segments must raise NetworkImpactValidationError."""
+    with pytest.raises(NetworkImpactValidationError, match="Expected segments to be an iterable"):
+        assess_network_impact(base_incident, 42)
+
+
+def test_type_error_during_segment_iteration_is_not_masked(base_incident):
+    """TypeError raised during segment iteration must not be swallowed into NetworkImpactValidationError."""
+    def faulty_generator():
+        yield {"segment_id": "SEG-OK", "latitude": 26.15, "longitude": 91.75}
+        raise TypeError("Custom internal type error from generator")
+
+    with pytest.raises(TypeError, match="Custom internal type error from generator"):
+        assess_network_impact(base_incident, faulty_generator())

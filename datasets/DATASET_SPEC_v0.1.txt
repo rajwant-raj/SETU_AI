@@ -49,3 +49,36 @@ Label provenance contract:
 Important:
 disruption_proxy is a derived prototype label, not a claim of observed road closure.
 Real observations, derived labels, and synthetic labels must remain distinguishable through the label provenance fields above.
+
+disruption_proxy Contract & Specification:
+1. Data Type:
+   - Primary evaluation/training target: int (binary classification: 0 or 1).
+   - Secondary auxiliary target: float (continuous disruption risk score in [0.0, 1.0]).
+
+2. Valid Value Range:
+   - Binary label: {0, 1} where 0 = normal conditions (no disruption proxy triggered) and 1 = disrupted proxy triggered.
+   - Continuous score: [0.0, 1.0] where 0.0 = minimal disruption indicator and 1.0 = maximum disruption indicator.
+
+3. Temporal Window:
+   - Calendar date window: 00:00:00 to 23:59:59 UTC (matching daily historical weather aggregation and daily incident timestamps).
+   - A segment row represents conditions aggregated across that specific 24-hour window.
+
+4. Spatial Window:
+   - Segment proximity buffer: road segment midpoint or point-to-segment geometry within a 10.0 km radius (or the incident's explicit impact_radius_km) of a reported GDACS disaster / field hazard centroid.
+
+5. Canonical Deterministic Derivation Rule:
+   - Binary disruption_proxy is evaluated deterministically as 1 if ANY of the following hazard threshold conditions are satisfied:
+     a) Active disaster proximity: nearest_disaster_distance_km <= 10.0 AND disaster_severity >= 0.50
+     b) Severe precipitation: precipitation_mm >= 50.0 (regional flood/landslide risk threshold)
+     c) Gale wind hazard: wind_gust_kmh >= 65.0 (obstruction/tree fall hazard threshold)
+     d) Fragile infrastructure impact: accessibility_score < 0.40 AND precipitation_mm >= 25.0
+     Otherwise, disruption_proxy = 0.
+   - Continuous disruption_proxy score is the unweighted/weighted composite index bounded to [0.0, 1.0].
+
+6. Producer / Evaluator Contract:
+   - Producers of datasets populated with this target MUST set:
+     * label_type = "derived"
+     * label_source = "GDACS + Open-Meteo + OSM"
+     * label_derivation_method = "deterministic_threshold_rule_v0.1"
+   - Evaluators and ML models consuming disruption_proxy MUST treat it exclusively as an engineered proxy signal for decision-support experiments.
+   - Never represent or report disruption_proxy as observed physical road closure, police closure confirmation, or ground-truth traffic standstill.

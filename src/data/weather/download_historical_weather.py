@@ -533,53 +533,68 @@ def process_weather():
 
     records = []
 
-    json_files = sorted(
-        RAW_DIR.glob(
-            "daily_*.json"
-        )
-    )
-
-    if not json_files:
-
-        raise FileNotFoundError(
-            "No cached weather batches found."
-        )
-
-    chunks = dict(
+    chunks = list(
         date_chunks(
             START_DATE,
             END_DATE,
         )
     )
 
-    for json_file in json_files:
+    if not chunks or not RAW_DIR.exists() or not any(RAW_DIR.glob("daily_*.json")):
+        raise FileNotFoundError(
+            "No cached weather batches found."
+        )
 
-        batch_name = json_file.stem
-        batch = manifest.get("batches", {}).get(batch_name)
+    manifest_batches = manifest.get("batches", {})
 
-        if not batch:
-            raise RuntimeError(
-                f"Cached batch {json_file.name} is not registered in the weather cache manifest."
+    for index, (
+        chunk_start,
+        chunk_end,
+    ) in enumerate(
+        chunks,
+        start=1,
+    ):
+        batch_name = f"daily_{index:03d}"
+        expected_file = RAW_DIR / f"{batch_name}.json"
+
+        if not expected_file.exists():
+            raise FileNotFoundError(
+                f"Expected cached batch file {expected_file.name} not found."
             )
 
-        if batch.get("file") != json_file.name:
+        batch = manifest_batches.get(batch_name)
+        if not batch:
             raise RuntimeError(
-                f"Weather cache manifest file mismatch for {json_file.name}."
+                f"Cached batch {expected_file.name} is not registered in the weather cache manifest."
+            )
+
+        if batch.get("file") != expected_file.name:
+            raise RuntimeError(
+                f"Weather cache manifest file mismatch for {expected_file.name}."
             )
 
         if (
-            batch.get("size_bytes") != json_file.stat().st_size
-            or batch.get("sha256") != file_sha256(json_file)
+            batch.get("start_date") != chunk_start
+            or batch.get("end_date") != chunk_end
         ):
             raise RuntimeError(
-                f"Cached batch {json_file.name} failed manifest integrity validation."
+                f"Weather cache manifest date range mismatch for {batch_name}: "
+                f"expected {chunk_start} to {chunk_end}, got {batch.get('start_date')} to {batch.get('end_date')}."
+            )
+
+        if (
+            batch.get("size_bytes") != expected_file.stat().st_size
+            or batch.get("sha256") != file_sha256(expected_file)
+        ):
+            raise RuntimeError(
+                f"Cached batch {expected_file.name} failed manifest integrity validation."
             )
 
         print(
-            f"Processing {json_file.name}"
+            f"Processing {expected_file.name}"
         )
 
-        with json_file.open(
+        with expected_file.open(
             "r",
             encoding="utf-8",
         ) as file:
