@@ -126,7 +126,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | ETA / delay engine | ✅ COMPLETE | 11 | Deterministic baseline ETA + disruption delay engine; 60 ETA tests passing; 188 total tests passing; compileall passed; git diff --check passed; zero new external dependencies; no external routing/traffic services; no ML/LLM/RAG integration; deviation audit PASS |
 | Thin Digital Twin Foundation | ✅ COMPLETE | 12 | Thin state-based/simulation-oriented foundation; operational state + deterministic events + isolated what-if scenarios; composes existing Network Impact, Accessibility, ETA, and Risk engines; 23 Digital Twin tests passing; 211 total tests passing; compileall passed; git diff --check passed; zero new dependencies/services; deviation audit PASS |
 | Route candidate generation | ✅ COMPLETE | 13 | Deterministic in-memory graph construction + Yen's K-shortest simple paths algorithm; strictly physical distance cost; explicit blocked segment exclusion; 17 route candidate tests passing; 228 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
-| Route ranking | ⏳ PENDING | — | Compare ETA, risk, accessibility, distance, vehicle fit |
+| Route ranking | ✅ COMPLETE | 14 | Deterministic candidate route ranking; candidate-set min-max utility normalization; ETA, risk, accessibility, distance, vehicle profile compatibility proxy; 25 route ranking tests passing; 253 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
 | Explanation output | ⏳ PENDING | — | Operational reasons, not opaque scores |
 | Human-approval recommendation contract | ⏳ PENDING | — | Recommendation → approve/reject → reroute |
 
@@ -157,7 +157,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 13 — Route Candidate Generation complete**
+**Checkpoint 14 — Route Ranking complete**
 
 Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
@@ -202,11 +202,31 @@ Completed (Checkpoint 13 — Route Candidate Generation):
 - Zero external routing APIs (no Mapbox, OSRM, Google Maps, or remote services)
 - No ML, GA/PSO, databases, Kafka, Redis, or background services
 
+Completed (Checkpoint 14 — Route Ranking):
+- Deterministic candidate route ranking layer implementing candidate-set min-max utility normalization
+- Supported signals: ETA (lower is better), Risk (lower is better), Accessibility (higher is better), Physical Distance (lower is better), and Vehicle Profile Compatibility Proxy (higher is better)
+- Availability signal explicitly declared unsupported in v0.1 and not fabricated
+- Vehicle fit honestly renamed and documented as a vehicle profile compatibility proxy, not physical vehicle clearance/load compatibility
+- Risk strictly derived from precomputed candidate risk_score or complete explicit risk_context containing every required Risk Engine field (incident_severity, accessibility_score, weather_severity, road_condition_score, network_criticality, current_delay_ratio); zero default fabrication, zero ETA delay derivation, zero segment accessibility derivation
+- Proportional normalized default weights mathematically summing to exactly 1.0 (ETA 30/95, Risk 20/95, Accessibility 20/95, Distance 15/95, Vehicle profile compatibility proxy 10/95)
+- Strict custom-weight validation rejecting unknown metric keys
+- Division-by-zero protection on constant metric sets and single-candidate collections
+- Explicit deterministic tie-breaking: ranking score (descending) -> distance (ascending) -> segment count (ascending) -> segment ID sequence -> node sequence -> route ID
+- Structured tradeoff summary exposed for downstream Checkpoint 15 Explanation
+- Caller candidate dictionaries preserved without mutation
+- 25 route ranking tests passing across all required areas
+- 253 total tests passing across repository
+- compileall passed
+- git diff --check passed
+- Zero new external dependencies introduced for Checkpoint 14
+- Zero external routing APIs (no Mapbox, OSRM, Google Maps, or remote services)
+- No ML, GA/PSO, databases, Kafka, Redis, or background services
+
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 14 — Route Ranking
+Checkpoint 15 — Explanation
 
 ---
 
