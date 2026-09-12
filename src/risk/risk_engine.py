@@ -11,6 +11,7 @@ Specification: src/risk/RISK_ENGINE_SPEC_v0.1.md
 from __future__ import annotations
 
 import math
+from types import MappingProxyType
 from typing import Any, Dict, List, Mapping, Tuple
 
 
@@ -19,15 +20,16 @@ class RiskEngineValidationError(ValueError):
     pass
 
 
-# Prototype policy weights (sum exactly to 1.00)
-WEIGHTS: Dict[str, float] = {
+# Prototype policy weights (sum exactly to 1.00). Exposed read-only so callers
+# cannot change the risk policy at runtime.
+WEIGHTS: Mapping[str, float] = MappingProxyType({
     "incident_severity": 0.30,
     "weather_severity": 0.20,
     "accessibility_risk": 0.15,
     "road_condition_risk": 0.15,
     "network_criticality": 0.10,
     "current_delay_ratio": 0.10,
-}
+})
 
 # Six required input fields as defined in the v0.1 specification
 REQUIRED_FIELDS: Tuple[str, ...] = (
