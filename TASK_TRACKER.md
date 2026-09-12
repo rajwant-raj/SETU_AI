@@ -124,6 +124,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Network Impact Engine | ✅ COMPLETE | 9 | Deterministic local spatial impact engine; geometry-aware segment proximity; 46 Network Impact tests passing |
 | Accessibility scoring | ✅ COMPLETE | 10 | Deterministic OSM-derived infrastructure accessibility proxy; dynamic evidence normalization; 44 Accessibility tests passing |
 | ETA / delay engine | ✅ COMPLETE | 11 | Deterministic baseline ETA + disruption delay engine; 60 ETA tests passing; 188 total tests passing; compileall passed; git diff --check passed; zero new external dependencies; no external routing/traffic services; no ML/LLM/RAG integration; deviation audit PASS |
+| Thin Digital Twin Foundation | ✅ COMPLETE | 12 | Thin state-based/simulation-oriented foundation; operational state + deterministic events + isolated what-if scenarios; composes existing Network Impact, Accessibility, ETA, and Risk engines; 23 Digital Twin tests passing; 211 total tests passing; compileall passed; git diff --check passed; zero new dependencies/services; deviation audit PASS |
 | Route candidate generation | ⏳ PENDING | — | Generate alternatives |
 | Route ranking | ⏳ PENDING | — | Compare ETA, risk, accessibility, distance, vehicle fit |
 | Explanation output | ⏳ PENDING | — | Operational reasons, not opaque scores |
@@ -156,31 +157,35 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 11 — ETA / Delay Engine complete**
+**Checkpoint 12 — Thin Digital Twin Foundation complete**
 
 Completed:
-- Deterministic baseline ETA + disruption delay engine implemented
-- OSM-derived infrastructure speed hierarchy proxies with surface and vehicle multipliers
-- Uncapped delay ratio + normalized delay ratio calibrated for Risk Engine v0.1
-- Blocked segment handling with `DEFAULT_BLOCKED_SEGMENT_PENALTY_SECONDS` (7200.0s)
-- Degenerate 0.0 km segment support (producing 0.0s ETA and 0.0s delay)
-- Fallback endpoint coordinate distance derivation via haversine
-- Strict rejection of conflicting disruption representations with no implicit precedence
-- Immutable policy mapping proxies (`DEFAULT_SPEED_LIMITS_KMH`, `DEFAULT_SURFACE_MODIFIERS`, `DEFAULT_VEHICLE_PROFILES`)
-- Output honesty disclosure explicitly documenting infrastructure speed proxies
-- Direct end-to-end integration test with Risk Engine v0.1 passing
-- 60 ETA tests passing
-- 188 total tests passing
+- Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
+- Strict entity validation and referential integrity
+- Deterministic event layer implemented with required event_id, event_type, timestamp, and payload
+- Supported incident_created, vehicle_location_updated, shipment_status_changed, route_approved, and route_changed events
+- Incident impact linked through existing Network Impact Engine
+- Confirmed closures only may explicitly set `is_blocked = True`
+- No fabricated disruption factor, speed reduction, or physical road closure
+- Existing Accessibility, ETA, Network Impact, and Risk engines reused without formula duplication
+- Strict Risk Engine v0.1 input contract preserved; no fabricated missing inputs
+- What-if simulation implemented using isolated deep-copy scenario state
+- Explicit blocked-segment, speed-reduction, and simulated-incident scenario overrides
+- Baseline vs scenario ETA, passability, delay, and optional Risk comparison
+- Live state mutation prevented during simulation
+- Deterministic repeated simulation validated
+- 23 Digital Twin tests passing
+- 211 total tests passing
 - compileall passed
 - git diff --check passed
-- Zero new external dependencies introduced for Checkpoint 11
-- No external routing/traffic services, ML, LLM, or backend integration introduced
+- Zero new external dependencies introduced for Checkpoint 12
+- No databases, Redis, Kafka, brokers, WebSockets, API servers, ML, LLM, RAG, or routing algorithms introduced
 
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 12 — Thin Digital Twin Foundation
+Checkpoint 13 — Route Candidate Generation
 
 ---
 
