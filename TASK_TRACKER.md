@@ -107,8 +107,8 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Item | Status | Checkpoint | Notes |
 |---|---|---:|---|
 | OSM/Overpass road acquisition | ✅ COMPLETE | 1 | Guwahati–Imphal study area; cached locally |
-| OSM normalization | ✅ COMPLETE | 2 | 16,272 normalized segments |
-| Core road network | ✅ COMPLETE | 3 | 8,007 major-road segments |
+| OSM normalization | ✅ COMPLETE | 2 | 16,272 normalized segments before geometry refinement |
+| Core road network | ✅ COMPLETE | 3 | 8,007 major-road segments before geometry refinement |
 | Elevation enrichment | ✅ COMPLETE | 4 | 8,007/8,007 core segments enriched |
 | Historical weather exploration | ✅ COMPLETE | 5 | Cached 2019–2024 at 40 representative points |
 | Live weather module scaffold | ✅ COMPLETE | 6 | Open-Meteo Forecast API client created and syntax-checked |
@@ -120,6 +120,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 |---|---|---:|---|
 | Risk Engine v0.1 specification | ✅ COMPLETE | 7 | Define inputs, weights, thresholds, reasons |
 | Risk Engine implementation | ✅ COMPLETE | 8 | Deterministic weighted risk engine implemented and tested |
+| Phase 8 review fixes | ✅ COMPLETE | 8R | README/spec synchronization, label provenance, OSM geometry retention, weather cache validation, risk-spec correction, immutable weights |
 | Network Impact Engine | ⏳ PENDING | — | Incident → affected segments/shipments |
 | Accessibility scoring | ⏳ PENDING | — | Route/segment accessibility |
 | ETA / delay engine | ⏳ PENDING | — | Baseline ETA + disruption delay |
@@ -155,20 +156,33 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 8 — Risk Engine v0.1 complete**
+**Checkpoint 8 — Risk Engine v0.1 complete + review fixes**
 
 Completed:
 - Risk specification finalized
 - Internal specification contradiction corrected
 - Deterministic Python implementation completed
-- 34 tests passing
-- Syntax check passed
-- git diff --check passed
-- No new dependencies or external services
-- No ML/LLM/API/routing introduced
+- 34 original Risk Engine tests passed before review fixes
+- Risk policy weights made immutable with a standard-library read-only mapping
+- Added explicit immutability tests
+- README status synchronized with implementation/tracker
+- Dataset label provenance contract added
+- OSM acquisition changed to retain full way geometry; normalization now splits geometry into measurable segments with endpoints and haversine segment lengths
+- Historical weather cache now records and validates sampling-point, date-range and selection configuration plus per-batch integrity metadata
+- Maximum-risk specification case corrected to use accessibility_score=0 and road_condition_score=0 with the other four inputs at 1
+- `.gitignore` was already correct and required no change
 
 Deviation audit:
 PASS
+
+Review finding disposition:
+- README risk status — VALID; fixed
+- Dataset label provenance — VALID; fixed
+- OSM geometry retention — VALID; fixed, including the downstream normalization required to use geometry
+- Weather cache configuration validation — VALID; fixed with a manifest and per-batch integrity checks
+- Maximum-risk specification case — VALID; fixed
+- Immutable WEIGHTS — VALID; fixed and tested
+- `.env` ignore rules — ALREADY SATISFIED; `.gitignore` already contained `.env`, `.env.*`, `!.env.example`, plus the requested environment/cache/log/generated-artifact exclusions; no unnecessary change made
 
 Next approved task:
 Network Impact Engine
