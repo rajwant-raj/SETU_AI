@@ -126,8 +126,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | ETA / delay engine | ✅ COMPLETE | 11 | Deterministic baseline ETA + disruption delay engine; 60 ETA tests passing; 188 total tests passing; compileall passed; git diff --check passed; zero new external dependencies; no external routing/traffic services; no ML/LLM/RAG integration; deviation audit PASS |
 | Thin Digital Twin Foundation | ✅ COMPLETE | 12 | Thin state-based/simulation-oriented foundation; operational state + deterministic events + isolated what-if scenarios; composes existing Network Impact, Accessibility, ETA, and Risk engines; 23 Digital Twin tests passing; 211 total tests passing; compileall passed; git diff --check passed; zero new dependencies/services; deviation audit PASS |
 | Route candidate generation | ✅ COMPLETE | 13 | Deterministic in-memory graph construction + Yen's K-shortest simple paths algorithm; strictly physical distance cost; explicit blocked segment exclusion; 17 route candidate tests passing; 228 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
-| Route ranking | ✅ COMPLETE | 14 | Deterministic candidate route ranking; candidate-set min-max utility normalization; ETA, risk, accessibility, distance, vehicle profile compatibility proxy; 25 route ranking tests passing; 253 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
-| Explanation output | ⏳ PENDING | — | Operational reasons, not opaque scores |
+| Explanation output | ✅ COMPLETE | 15 | Deterministic structured explanation of route ranking results; 5 decision factors (ETA, risk, accessibility, distance, vehicle profile compatibility proxy); comparative tradeoffs; risk reason preservation; honesty disclosures; 17 explanation tests passing; 270 total tests passing; compileall passed; git diff --check passed; zero new dependencies; zero external APIs; deviation audit PASS |
 | Human-approval recommendation contract | ⏳ PENDING | — | Recommendation → approve/reject → reroute |
 
 ### ML / EVALUATION
@@ -157,7 +156,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 14 — Route Ranking complete**
+**Checkpoint 15 — Explanation complete**
 
 Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
@@ -222,11 +221,31 @@ Completed (Checkpoint 14 — Route Ranking):
 - Zero external routing APIs (no Mapbox, OSRM, Google Maps, or remote services)
 - No ML, GA/PSO, databases, Kafka, Redis, or background services
 
+Completed (Checkpoint 15 — Explanation):
+- Deterministic explanation layer translating Route Ranking outputs into operator-readable explanations
+- Exposes explain_ranked_route and explain_ranked_routes public APIs
+- Strictly explanatory: does not recalculate ranking scores, alter route ordering, or introduce new weights
+- Evaluates 5 supported decision factors: ETA, Risk, Accessibility, Distance, and Vehicle Profile Compatibility Proxy
+- Retains exact weights applied and normalized utility scores from the ranking input
+- Comparative tradeoff analysis against runner-up/top candidate without hardcoded or fabricated facts
+- Single-route explanation supported without nonexistent alternative comparisons
+- Preserves upstream Risk Engine reason codes and reasons when present; honestly notes absence without fabrication
+- Explicit honesty disclosures: vehicle profile compatibility proxy (not physical vehicle passability), availability unsupported, real-world conditions require operational data, human operator retains authority
+- Strict input validation rejecting missing or corrupted ranking structures, metrics, scores, and weights
+- Input immutability preserved (zero caller dictionary mutation)
+- 17 route explanation tests passing across all required areas
+- 270 total tests passing across repository
+- compileall passed
+- git diff --check passed
+- Zero new external dependencies introduced for Checkpoint 15
+- Zero external routing/explanation APIs (no LLMs, OpenAI, Mapbox, OSRM, or remote services)
+- No ML, GA/PSO, databases, Kafka, Redis, or background services
+
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 15 — Explanation
+Checkpoint 16 — Incident → Reroute demo loop
 
 ---
 
