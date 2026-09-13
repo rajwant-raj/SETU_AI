@@ -136,13 +136,13 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Item | Status | Checkpoint | Notes |
 |---|---|---:|---|
 | ML Dataset Construction | ✅ COMPLETE | 18 | Pure standard-library ML dataset builder implemented; test-first; 16 Checkpoint 18 tests passing; 333 total repository tests passing; 8,007 road segments; 40 weather stations resolved; 2019-01-01 through 2024-12-31; exact 17,551,344 segment-day rows generated; six annual CSV partitions generated; dataset_metadata.json generated; exact canonical 30-column schema validated; zero duplicate (segment_id, date) combinations; deterministic row ordering validated; leakage audit passed; derived disruption_proxy provenance contract preserved; disaster condition (a) inactive because local disaster directory is empty (no fabricated events); compileall passed; git diff --check passed; zero new external dependencies; no external API calls; no ML training performed; no ML inference implemented; deviation audit PASS |
-| ML Training + Evaluation Pipeline | ⏳ READY FOR TRAINING-EVALUATION EXECUTION | 19 | Implementation at 36b15e0, orchestration at b98ad7a; 16/16 CP19 tests passing; 10/10 orchestration tests passing; 333 CP1–18 regression tests passing; compileall clean; Python 3.10.9 / scikit-learn 1.6.1; dataset independently reconciled (Train 2019–2022: 11,698,227, Val 2023: 2,922,555, Test 2024: 2,930,562, Total: 17,551,344 rows across 6 CSV partitions); full-scale model training NOT yet executed; final model artifacts NOT yet generated; ready for execution |
-| Logistic Regression baseline | ⏳ READY TO TRAIN | 19 | Linear baseline implementation ready with SGD fallback; training pending |
-| Random Forest comparison | ⏳ READY TO TRAIN | 19 | Bagged ensemble implementation ready; 500k sampling contract ready; training pending |
-| HistGradientBoosting benchmark | ⏳ READY TO TRAIN | 19 | Binned gradient boosting benchmark implementation ready; training pending |
-| Temporal validation & test | ⏳ READY TO TRAIN | 19 | Chronological split (Train 2019–2022, Val 2023, Test 2024); frozen threshold evaluation ready |
+| ML Training + Evaluation Pipeline | ✅ COMPLETE | 19 | Implementation at 36b15e0, orchestration at b98ad7a, test-fix at a19caa7; 16/16 CP19 tests passing; 10/10 orchestration tests passing; 333 CP1–18 regression tests passing; compileall clean; Python 3.10.9 / scikit-learn 1.6.1; dataset independently reconciled (Train: 11,698,227, Val: 2,922,555, Test: 2,930,562, Total: 17,551,344 rows across 6 partitions); full-scale model training executed; all 7 artifacts generated locally under gitignored models/; champion: random_forest; frozen threshold: 0.30; 2024 test PR-AUC 1.0, ROC-AUC 1.0, F1 1.0 (0.99995); zero model artifacts committed to Git |
+| Logistic Regression baseline | ✅ COMPLETE | 19 | Fitted as primary LogisticRegression on 11.7M rows without SGD fallback; Val PR-AUC 0.9678, ROC-AUC 0.9992, F1 0.8899 at threshold 0.94 |
+| Random Forest comparison | ✅ COMPLETE | 19 | Fitted on 500k positive-preserving sample (281,621 positives retained, 56.32% prevalence); selected as Champion; Val PR-AUC 1.0, ROC-AUC 1.0, F1 1.0 at threshold 0.30 |
+| HistGradientBoosting benchmark | ✅ COMPLETE | 19 | Fitted on full 11.7M population with balanced sample weights; Val PR-AUC 0.9991, ROC-AUC 1.0, F1 0.9849 at threshold 0.96 |
+| Temporal validation & test | ✅ COMPLETE | 19 | 2023 validation tuned thresholds and selected champion; 2024 held-out test evaluated once at frozen threshold 0.30 without retuning or retraining (PR-AUC 1.0, F1 1.0) |
 | Spatial-holdout evaluation | ⏳ LATER | — | Deferred to later evaluation milestone on unseen roads/coordinates |
-| Decision-layer integration | ⏳ LATER | 20 | Connect model outputs back to operational decisions |
+| Decision-layer integration | ⏳ NEXT | 20 | Connect model outputs back to operational decisions |
 
 ### INTEGRATION / PRODUCT LOOP
 
@@ -159,7 +159,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 19 — ML Training + Evaluation Pipeline (Ready for Training-Evaluation Execution)**
+**Checkpoint 20 — Decision-Layer Integration / ML Inference Service**
 
 Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
@@ -315,9 +315,10 @@ Completed (Checkpoint 18 — ML Dataset Construction):
 - Zero new external dependencies introduced; zero external API calls during generation
 - No ML model training performed; no ML inference implemented
 
-Completed (Checkpoint 19 — ML Training + Evaluation Pipeline):
+Completed (Checkpoint 19 — ML Training + Evaluation):
 - ML training and evaluation core module implemented (`src/ml/train_models.py`, `src/ml/__init__.py`) at commit `36b15e0`
 - Training orchestration and execution layer implemented at commit `b98ad7a`
+- Post-training test import isolation fixed at commit `a19caa7`
 - Canonical 24-feature schema strictly enforced in deterministic order
 - Dynamic cyclical temporal feature derivation (`month_sin`, `month_cos`, `dow_sin`, `dow_cos`) from real CP18 CSV columns (`month`, `day_of_week`) verified on synthetic real-schema records
 - Precomputed temporal features from test fixtures seamlessly supported for full backward test compatibility
@@ -325,39 +326,42 @@ Completed (Checkpoint 19 — ML Training + Evaluation Pipeline):
 - Leakage isolation strictly verified: 14 forbidden columns (`segment_id`, `date`, `year`, `disruption_score_continuous`, `disruption_proxy`, `risk_score`, `risk_band`, etc.) completely isolated from features
 - Strict chronological split boundaries: Train 2019–2022, Val 2023, Test 2024; zero cross-year leakage
 - Train-only standardization: `StandardScaler` fit strictly on 2019–2022 training rows; tree models receive raw unscaled features
-- Linear baseline with explicit fallback contract: `LogisticRegression(solver='lbfgs', class_weight='balanced')` with deterministic fallback to `SGDClassifier(loss='log_loss', class_weight='balanced')` on resource/timeout/runtime errors, recording execution metadata
-- Random Forest positive-preserving sampler retaining 100% of positive training records and sampling negatives to reach exactly 500,000 rows with fixed seed 42 and complete audit metadata
-- HistGradientBoosting binned tabular benchmark with deterministic balanced sample weighting via `compute_sample_weight('balanced', y=y_train)`
-- Validation threshold optimization on 2023: exactly 99 candidate thresholds (0.01 to 0.99 in 0.01 steps), precision floor >= 0.20, F1 maximization, and deterministic tie-breaking
-- Temporal held-out evaluation contract: 2024 test partition evaluated strictly once at the frozen validation threshold without re-tuning
-- Champion model selection protocol: strictly by validation PR-AUC, then validation F1, then lexicographical model name tie-break (test set never consulted)
-- Complete metrics suite: PR-AUC, ROC-AUC, Brier score, Log-Loss from probabilities; Precision, Recall, F1, Confusion Matrix from thresholded predictions
+- Linear baseline with explicit fallback contract: `LogisticRegression(solver='lbfgs', class_weight='balanced')` fit successfully on full 11.7M rows without SGD fallback (`fallback_occurred=False`)
+- Random Forest positive-preserving sampler retaining 100% of positive training records (281,621 rows) and sampling negatives to reach exactly 500,000 rows with fixed seed 42 (sampled prevalence: 56.3242%)
+- HistGradientBoosting binned tabular benchmark fit on full 11.7M population with deterministic balanced sample weighting via `compute_sample_weight('balanced', y=y_train)`
+- Validation threshold optimization on 2023 across 99 candidate thresholds (0.01 to 0.99 in 0.01 steps), precision floor >= 0.20, F1 maximization, and deterministic tie-breaking:
+  - `linear`: Val PR-AUC 0.9678, ROC-AUC 0.9992, Precision 0.9251, Recall 0.8574, F1 0.8899, Selected Threshold: 0.94
+  - `random_forest`: Val PR-AUC 1.0000, ROC-AUC 1.0000, Precision 1.0000, Recall 1.0000, F1 1.0000, Selected Threshold: 0.30
+  - `hist_gradient_boosting`: Val PR-AUC 0.9991, ROC-AUC 1.0000, Precision 0.9902, Recall 0.9797, F1 0.9849, Selected Threshold: 0.96
+- Champion model selection protocol: `random_forest` selected based strictly on highest validation PR-AUC (1.0000) and F1 (1.0000); frozen decision threshold fixed at 0.30
+- Temporal held-out evaluation on 2024 (2,930,562 rows, 92,511 positive disruptions) strictly evaluated once at frozen threshold 0.30 without re-tuning or retraining:
+  - PR-AUC: 1.0000, ROC-AUC: 1.0000, Decision Threshold: 0.30, Precision: 0.9999, Recall: 1.0000, F1: 1.0000 (0.99995), Brier Score: 0.0002, Log-Loss: 0.0028, TP: 92,511, FP: 9, TN: 2,838,042, FN: 0
 - Memory-safe dataset loader (`load_split_matrix`) with fast binary line counting (`count_partition_rows`), bounded chunk streaming (250,000 rows), and float32/int8 preallocation
 - Strict memory lifetime isolation: zero simultaneous coexisting train, validation, or test matrices
-- End-to-end pipeline orchestrator (`run_training_pipeline`) sequencing Steps 1–15 with frozen threshold evaluation
-- Approved artifact serialization helper (`save_pipeline_artifacts`) writing all 7 approved files (`scaler.joblib`, `scaler_metadata.json`, `linear_baseline.joblib`, `random_forest.joblib`, `hist_gradient_boosting.joblib`, `evaluation_summary.json`, `model_comparison_report.md`) gated strictly by `save_artifacts=True`
-- Module imports remain 100% side-effect free; `models/` directory does not exist on disk
-- Observational resource diagnostics (`check_pipeline_resource_diagnostics`) distinguishing memory tiers without modifying configurations
+- All 7 approved model artifacts generated locally under gitignored `models/`: `scaler.joblib`, `scaler_metadata.json`, `linear_baseline.joblib`, `random_forest.joblib`, `hist_gradient_boosting.joblib`, `evaluation_summary.json`, `model_comparison_report.md`
+- Zero model artifacts committed to Git (git status remains clean; `.gitignore` line 40 enforces `models/`)
+- Module imports verified 100% side-effect free; isolated test verification passes post-training
 - Mandatory methodology disclosure strictly preserved: "SAME-DAY HISTORICAL CLASSIFICATION / ENGINEERED-LABEL RULE-REPLICATION"
-- Dataset row-count reconciliation completed independently via `csv.reader` across all 6 partitions (Train 2019–2022: 11,698,227; Val 2023: 2,922,555; Test 2024: 2,930,562; Total: 17,551,344 rows)
+- Explicit honesty disclosures:
+  - Not real-world physical road closure ground truth
+  - Not true future forecasting
+  - 2024 is a temporal holdout on the same road network corridor
+  - Unseen-road spatial generalization remains untested and explicitly deferred to a later evaluation milestone
+- Dataset row-count reconciliation verified across all 6 partitions:
+  - Train (2019–2022): 11,698,227 rows
+  - Validation (2023): 2,922,555 rows
+  - Test (2024): 2,930,562 rows
+  - Total: 17,551,344 rows
 - 16/16 Checkpoint 19 contract tests passing (`tests/test_ml_training.py`)
 - 10/10 Checkpoint 19 orchestration tests passing (`tests/test_ml_training_orchestration.py`)
 - 333 full repository regression tests passing across Checkpoints 1–18 in active `.venv` (Python 3.10.9, scikit-learn 1.6.1, numpy 2.2.6, scipy 1.15.3)
 - compileall clean; git diff --check clean
-- Full-scale model training NOT yet executed
-- Final model artifacts NOT yet generated
-- Training and evaluation execution phase remains pending operator authorization
-
-ML Training Guardrail:
-- Checkpoint 19 implementation pipeline and orchestration are complete and verified; full-scale model training and evaluation execution has NOT yet been performed.
-- All subsequent experiments in Checkpoint 19 must evaluate models as proof-of-pipeline threshold classifiers on same-day historical data, without claiming real-world physical road-closure forecasting accuracy.
-- True spatial holdout on unseen roads/coordinates is explicitly deferred to a later evaluation milestone.
 
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 19 — Execute Training + Validation + Frozen 2024 Test Evaluation
+Checkpoint 20 — Decision-Layer Integration / ML Inference Service
 
 ---
 
