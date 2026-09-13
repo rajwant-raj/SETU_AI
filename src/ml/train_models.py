@@ -21,10 +21,13 @@ Enforces:
 from __future__ import annotations
 
 import csv
+import gc
 import importlib.util
 import json
 import math
 from pathlib import Path
+import platform
+import sys
 from typing import Any, Dict, Generator, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -273,7 +276,7 @@ def prepare_model_input(
     - 'hist_gradient_boosting': Raw unscaled features
     """
     model_type_norm = model_type.lower().strip()
-    if model_type_norm == "linear":
+    if model_type_norm in ("linear", "linear_baseline"):
         if scaler is None:
             raise ValueError("scaler must be provided for linear model_type")
         return scaler.transform(X)
@@ -676,7 +679,7 @@ ARTIFACT_PATHS: Dict[str, Path] = {
 
 
 # ------------------------------------------------------------------------------
-# 12. Memory-Safe Dataset Loading Helpers
+# 12. Memory-Safe Dataset Loading & Partition Helpers
 # ------------------------------------------------------------------------------
 
 def get_partition_path(year: int, base_dir: Union[str, Path] = "datasets/processed/ml") -> Path:
@@ -703,3 +706,622 @@ def stream_partition_records(
                 chunk = []
         if chunk:
             yield chunk
+
+
+def count_partition_rows(partition_path: Union[str, Path]) -> int:
+    """Fast binary counting of data rows (excluding header) in a partition CSV."""
+    path = Path(partition_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Partition file does not exist: {path}")
+
+    total_lines = 0
+    last_char = b""
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            total_lines += chunk.count(b"\n")
+            if chunk:
+                last_char = chunk[-1:]
+    if last_char and last_char != b"\n":
+        total_lines += 1
+    return max(0, total_lines - 1)
+
+
+def load_split_matrix(
+    years: Union[int, Sequence[int]],
+    base_dir: Union[str, Path] = "datasets/processed/ml",
+    chunk_size: int = 250_000,
+) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Sequentially load annual CSV partitions into preallocated float32 feature matrix and int8 target vector.
+
+    Enforces:
+    - Bounded memory usage via incremental streaming and chunk ingestion
+    - Exact preallocation of X (float32) and y (int8)
+    - Deterministic chronological year ordering
+    - Exact row order preservation within each partition
+    - Canonical 24-feature extraction with weather_code transformation and cyclical temporal derivations
+    - Strict target proxy extraction (disruption_proxy) and total leakage isolation
+    - Comprehensive metadata return
+    - Clear failure context on malformed records
+    """
+    if isinstance(years, (int, str)):
+        year_list = [int(years)]
+    else:
+        year_list = [int(y) for y in years]
+
+    # Preserve deterministic chronological year ordering
+    year_list = sorted(list(dict.fromkeys(year_list)))
+
+    # Compute partition row counts and preallocate final matrices
+    partition_counts: Dict[int, int] = {}
+    for y in year_list:
+        p_path = get_partition_path(y, base_dir=base_dir)
+        partition_counts[y] = count_partition_rows(p_path)
+
+    total_rows = sum(partition_counts.values())
+    n_features = len(CANONICAL_FEATURES)
+
+    X = np.empty((total_rows, n_features), dtype=np.float32)
+    y = np.empty(total_rows, dtype=np.int8)
+
+    current_idx = 0
+    for year in year_list:
+        p_path = get_partition_path(year, base_dir=base_dir)
+        with p_path.open("r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+
+            chunk_records: List[List[float]] = []
+            chunk_targets: List[int] = []
+
+            row_num = 1  # 1-indexed relative to data rows
+            for raw_row in reader:
+                try:
+                    features = extract_feature_vector(raw_row)
+                except Exception as err:
+                    raise ValueError(
+                        f"Malformed feature record in partition {p_path} (year {year}) at data row {row_num}: {err}"
+                    ) from err
+
+                if TARGET_COLUMN not in raw_row:
+                    raise KeyError(
+                        f"Missing target column '{TARGET_COLUMN}' in partition {p_path} (year {year}) at data row {row_num}"
+                    )
+                try:
+                    target_val = int(raw_row[TARGET_COLUMN])
+                except (ValueError, TypeError) as err:
+                    raise ValueError(
+                        f"Invalid target value {raw_row[TARGET_COLUMN]!r} in partition {p_path} (year {year}) at data row {row_num}: {err}"
+                    ) from err
+
+                if target_val not in (0, 1):
+                    raise ValueError(
+                        f"Target value {target_val} not in (0, 1) in partition {p_path} (year {year}) at data row {row_num}"
+                    )
+
+                chunk_records.append(features)
+                chunk_targets.append(target_val)
+                row_num += 1
+
+                if len(chunk_records) >= chunk_size:
+                    n_chunk = len(chunk_records)
+                    X[current_idx : current_idx + n_chunk] = np.array(chunk_records, dtype=np.float32)
+                    y[current_idx : current_idx + n_chunk] = np.array(chunk_targets, dtype=np.int8)
+                    current_idx += n_chunk
+                    chunk_records = []
+                    chunk_targets = []
+
+            if chunk_records:
+                n_chunk = len(chunk_records)
+                X[current_idx : current_idx + n_chunk] = np.array(chunk_records, dtype=np.float32)
+                y[current_idx : current_idx + n_chunk] = np.array(chunk_targets, dtype=np.int8)
+                current_idx += n_chunk
+                chunk_records = []
+                chunk_targets = []
+
+    if current_idx != total_rows:
+        raise RuntimeError(
+            f"Row count mismatch during loading: expected {total_rows}, processed {current_idx}"
+        )
+
+    pos_count = int(np.sum(y == 1)) if total_rows > 0 else 0
+    neg_count = int(np.sum(y == 0)) if total_rows > 0 else 0
+    metadata: Dict[str, Any] = {
+        "years": list(year_list),
+        "row_count": int(total_rows),
+        "positive_count": pos_count,
+        "negative_count": neg_count,
+        "prevalence": float(pos_count / total_rows) if total_rows > 0 else 0.0,
+        "feature_count": int(n_features),
+        "feature_names": list(CANONICAL_FEATURES),
+        "partition_row_counts": partition_counts,
+        "dtype_information": {
+            "X_dtype": str(X.dtype),
+            "y_dtype": str(y.dtype),
+        },
+        "dtypes": {
+            "X": str(X.dtype),
+            "y": str(y.dtype),
+        },
+    }
+
+    return X, y, metadata
+
+
+# ------------------------------------------------------------------------------
+# 13. Model Probability Inference Interface
+# ------------------------------------------------------------------------------
+
+def get_model_probabilities(model: Any, X: Any) -> np.ndarray:
+    """Extract positive class probabilities P(y=1) using sklearn model probability API.
+
+    Supports:
+    - predict_proba()[:, 1]
+    - decision_function converted via sigmoid fallback
+    """
+    if hasattr(model, "predict_proba"):
+        proba = model.predict_proba(X)
+        if hasattr(proba, "ndim") and proba.ndim == 2 and proba.shape[1] >= 2:
+            return np.asarray(proba[:, 1], dtype=np.float64)
+        elif hasattr(proba, "ndim") and proba.ndim == 1:
+            return np.asarray(proba, dtype=np.float64)
+    if hasattr(model, "decision_function"):
+        scores = np.asarray(model.decision_function(X), dtype=np.float64)
+        return 1.0 / (1.0 + np.exp(-scores))
+    raise AttributeError(f"Model of type {type(model).__name__} has neither predict_proba nor decision_function")
+
+
+# ------------------------------------------------------------------------------
+# 14. Report Generation & Artifact Serialization Helpers
+# ------------------------------------------------------------------------------
+
+def generate_model_comparison_report(summary: Mapping[str, Any]) -> str:
+    """Generate deterministic Markdown model comparison report from evaluation summary."""
+    splits = summary.get("dataset_splits", {})
+    linear_exec = summary.get("linear_model_execution", {})
+    val_metrics = summary.get("validation_metrics", {})
+    champ = summary.get("champion_selection", {})
+    test_metrics = summary.get("test_metrics_2024", {})
+
+    train_rows = splits.get("train_rows", 0)
+    train_pos = splits.get("train_positives", 0)
+    train_prev = splits.get("train_prevalence", 0.0)
+    val_rows = splits.get("val_rows", 0)
+    val_pos = splits.get("val_positives", 0)
+    val_prev = splits.get("val_prevalence", 0.0)
+    test_rows = splits.get("test_rows", 0)
+    test_pos = splits.get("test_positives", 0)
+    test_prev = splits.get("test_prevalence", 0.0)
+
+    lines = [
+        "# SETU_AI — Baseline Model Training & Evaluation Comparison Report",
+        "",
+        "## 1. Methodology Disclosure",
+        "> **SAME-DAY HISTORICAL CLASSIFICATION / ENGINEERED-LABEL RULE-REPLICATION**",
+        ">",
+        "> This baseline model suite evaluates historical co-occurrence on the Guwahati–Imphal road corridor",
+        "> using engineered disruption proxy labels. It does **NOT** represent real-world road-closure prediction",
+        "> or future forecasting.",
+        "",
+        "## 2. Dataset & Chronological Splits",
+        f"- **Training Window (2019–2022)**: {train_rows:,} rows | {train_pos:,} positive disruptions | prevalence: {train_prev:.4%}",
+        f"- **Validation Window (2023)**: {val_rows:,} rows | {val_pos:,} positive disruptions | prevalence: {val_prev:.4%}",
+        f"- **Temporal Test Window (2024)**: {test_rows:,} rows | {test_pos:,} positive disruptions | prevalence: {test_prev:.4%}",
+        "",
+        "> **Generalization Limitation**:",
+        "> The 2024 temporal holdout evaluates generalization across an unseen temporal year on the same",
+        "> underlying corridor road network. It does **NOT** represent spatial generalization to unseen road segments.",
+        "",
+        "## 3. Feature Contract",
+        f"- Total canonical features: {len(CANONICAL_FEATURES)}",
+        "- Features: " + ", ".join(f"`{col}`" for col in CANONICAL_FEATURES),
+        "- Preprocessing: StandardScaler fit strictly on training set (2019–2022) for linear baseline; tree ensembles consume raw unscaled features.",
+        "",
+        "## 4. Model Architectures & Training Protocol",
+        f"1. **Linear Baseline**: LogisticRegression (solver=lbfgs, class_weight=balanced, max_iter=1000) with deterministic SGDClassifier fallback. Model used: `{linear_exec.get('model_type_used', 'N/A')}` (fallback occurred: `{linear_exec.get('fallback_occurred', False)}`).",
+        "2. **Random Forest**: RandomForestClassifier (n_estimators=100, max_depth=16, min_samples_leaf=10, class_weight=balanced_subsample, seed=42) fit on 500,000 positive-preserving sample.",
+        "3. **HistGradientBoosting**: HistGradientBoostingClassifier (max_iter=150, lr=0.08, max_leaf_nodes=31, min_samples_leaf=50, seed=42) fit on full population with balanced sample weights.",
+        "",
+        "## 5. Validation Comparison (2023)",
+        "| Model | Tuned Threshold | PR-AUC | ROC-AUC | Precision | Recall | F1 | Brier Score | Log-Loss |",
+        "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
+    ]
+
+    for model_name, m in val_metrics.items():
+        t = m.get("selected_threshold", 0.5)
+        lines.append(
+            f"| `{model_name}` | {t:.2f} | {m.get('pr_auc', 0.0):.4f} | {m.get('roc_auc', 0.0):.4f} | "
+            f"{m.get('precision', 0.0):.4f} | {m.get('recall', 0.0):.4f} | {m.get('f1', 0.0):.4f} | "
+            f"{m.get('brier_score', 0.0):.4f} | {m.get('log_loss', 0.0):.4f} |"
+        )
+
+    champ_name = champ.get("champion_name", "N/A")
+    champ_pr_auc = champ.get("champion_pr_auc", 0.0)
+    champ_f1 = champ.get("champion_f1", 0.0)
+    frozen_thresh = champ.get("frozen_threshold", 0.5)
+
+    lines.extend([
+        "",
+        "## 6. Champion Model Selection",
+        f"- **Champion**: `{champ_name}`",
+        f"- **Selection Metric (Primary)**: Highest validation PR-AUC ({champ_pr_auc:.4f})",
+        f"- **Tie-Breakers**: Highest validation F1 ({champ_f1:.4f}), then lexicographical name ordering",
+        f"- **Frozen Decision Threshold**: `{frozen_thresh:.2f}` (fixed strictly on 2023 validation; never tuned on 2024)",
+        "",
+        "## 7. Held-Out Temporal Test Results (2024)",
+        f"Evaluated on held-out 2024 test data strictly using the frozen champion threshold ({frozen_thresh:.2f}) without retraining or retuning:",
+        "",
+        "| Metric | Value |",
+        "| :--- | :---: |",
+        f"| PR-AUC | {test_metrics.get('pr_auc', 0.0):.4f} |",
+        f"| ROC-AUC | {test_metrics.get('roc_auc', 0.0):.4f} |",
+        f"| Decision Threshold | {test_metrics.get('threshold_applied', frozen_thresh):.2f} |",
+        f"| Precision | {test_metrics.get('precision', 0.0):.4f} |",
+        f"| Recall | {test_metrics.get('recall', 0.0):.4f} |",
+        f"| F1-Score | {test_metrics.get('f1', 0.0):.4f} |",
+        f"| Brier Score | {test_metrics.get('brier_score', 0.0):.4f} |",
+        f"| Log-Loss | {test_metrics.get('log_loss', 0.0):.4f} |",
+        f"| True Positives (TP) | {test_metrics.get('tp', 0):,} |",
+        f"| False Positives (FP) | {test_metrics.get('fp', 0):,} |",
+        f"| True Negatives (TN) | {test_metrics.get('tn', 0):,} |",
+        f"| False Negatives (FN) | {test_metrics.get('fn', 0):,} |",
+        "",
+    ])
+
+    return "\n".join(lines)
+
+
+def save_pipeline_artifacts(
+    pipeline_results: Mapping[str, Any],
+    output_dir: Union[str, Path] = MODELS_DIR,
+) -> Dict[str, Path]:
+    """Serialize trained models, scaler, JSON metadata, and comparison report.
+
+    Guarantees:
+    - Creates target directory ONLY upon invocation.
+    - Saves all 7 approved artifacts to ARTIFACT_PATHS locations under output_dir.
+    - Preserves exact evaluation summary JSON schema and disclosures.
+    - Generates markdown model comparison report.
+    """
+    import joblib
+
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    written_paths: Dict[str, Path] = {}
+
+    # 1. Scaler & Scaler Metadata
+    scaler = pipeline_results.get("scaler")
+    if scaler is not None:
+        p_scaler = out_path / "scaler.joblib"
+        joblib.dump(scaler, p_scaler)
+        written_paths["scaler"] = p_scaler
+
+        scaler_meta = {
+            "feature_names": list(CANONICAL_FEATURES),
+            "n_features_in": len(CANONICAL_FEATURES),
+            "mean": [float(m) for m in scaler.mean_] if hasattr(scaler, "mean_") else [],
+            "var": [float(v) for v in scaler.var_] if hasattr(scaler, "var_") else [],
+            "scale": [float(s) for s in scaler.scale_] if hasattr(scaler, "scale_") else [],
+            "n_samples_seen": int(scaler.n_samples_seen_) if hasattr(scaler, "n_samples_seen_") else 0,
+        }
+        p_scaler_meta = out_path / "scaler_metadata.json"
+        with p_scaler_meta.open("w", encoding="utf-8") as f:
+            json.dump(scaler_meta, f, indent=2)
+        written_paths["scaler_metadata"] = p_scaler_meta
+
+    # 2. Fitted Model Artifacts
+    models_dict = pipeline_results.get("models", {})
+    if "linear" in models_dict:
+        p_linear = out_path / "linear_baseline.joblib"
+        joblib.dump(models_dict["linear"], p_linear)
+        written_paths["linear_baseline"] = p_linear
+
+    if "random_forest" in models_dict:
+        p_rf = out_path / "random_forest.joblib"
+        joblib.dump(models_dict["random_forest"], p_rf)
+        written_paths["random_forest"] = p_rf
+
+    if "hist_gradient_boosting" in models_dict:
+        p_hgb = out_path / "hist_gradient_boosting.joblib"
+        joblib.dump(models_dict["hist_gradient_boosting"], p_hgb)
+        written_paths["hist_gradient_boosting"] = p_hgb
+
+    # 3. Evaluation Summary JSON
+    summary_data = pipeline_results.get("evaluation_summary")
+    if summary_data is not None:
+        p_summary = out_path / "evaluation_summary.json"
+        with p_summary.open("w", encoding="utf-8") as f:
+            json.dump(summary_data, f, indent=2)
+        written_paths["evaluation_summary"] = p_summary
+
+    # 4. Model Comparison Report Markdown
+    report_md = pipeline_results.get("model_comparison_report")
+    if report_md is not None:
+        p_report = out_path / "model_comparison_report.md"
+        with p_report.open("w", encoding="utf-8") as f:
+            f.write(report_md)
+        written_paths["model_comparison_report"] = p_report
+
+    return written_paths
+
+
+# ------------------------------------------------------------------------------
+# 15. Observational Preflight Diagnostics
+# ------------------------------------------------------------------------------
+
+def check_pipeline_resource_diagnostics(
+    train_row_count: int,
+    val_row_count: int,
+    test_row_count: int,
+    feature_count: int = 24,
+) -> Dict[str, Any]:
+    """Observational resource diagnostics distinguishing memory tiers.
+
+    Distinguishes:
+    - raw feature-matrix memory (float32 X + int8 y)
+    - temporary preprocessing memory (scaled arrays, chunk buffers)
+    - estimator working memory (working tree structures, histogram bins)
+    - model memory (persisted estimator objects)
+    """
+    bytes_per_float32 = 4
+    bytes_per_int8 = 1
+
+    train_raw_x_mb = (train_row_count * feature_count * bytes_per_float32) / (1024 * 1024)
+    train_raw_y_mb = (train_row_count * bytes_per_int8) / (1024 * 1024)
+    val_raw_x_mb = (val_row_count * feature_count * bytes_per_float32) / (1024 * 1024)
+    test_raw_x_mb = (test_row_count * feature_count * bytes_per_float32) / (1024 * 1024)
+
+    return {
+        "raw_feature_matrix_memory_mb": {
+            "train_X_mb": round(train_raw_x_mb, 2),
+            "train_y_mb": round(train_raw_y_mb, 2),
+            "val_X_mb": round(val_raw_x_mb, 2),
+            "test_X_mb": round(test_raw_x_mb, 2),
+            "total_raw_train_mb": round(train_raw_x_mb + train_raw_y_mb, 2),
+        },
+        "temporary_preprocessing_memory_note": (
+            "Train scaler creates a temporary scaled float32 copy freed immediately after linear fitting. "
+            "Validation and test matrices are sequentially loaded and released without coexisting."
+        ),
+        "estimator_working_memory_note": (
+            "RandomForest operates on a 500,000-row positive-preserving sample to cap working memory. "
+            "HistGradientBoosting operates with uint8 binned features (~256 bins) to cap memory footprint."
+        ),
+        "model_persisted_memory_note": (
+            "Model parameters in joblib files are estimated under 150MB total."
+        ),
+    }
+
+
+# ------------------------------------------------------------------------------
+# 16. Pipeline Orchestration Runner
+# ------------------------------------------------------------------------------
+
+def run_training_pipeline(
+    train_years: Sequence[int] = TRAIN_YEARS,
+    val_years: Sequence[int] = VAL_YEARS,
+    test_years: Sequence[int] = TEST_YEARS,
+    base_dir: Union[str, Path] = "datasets/processed/ml",
+    chunk_size: int = 250_000,
+    rf_target_total: int = 500_000,
+    precision_floor: float = 0.20,
+    num_thresholds: int = 99,
+    save_artifacts: bool = False,
+    output_dir: Union[str, Path] = MODELS_DIR,
+    random_state: int = RANDOM_SEED,
+) -> Dict[str, Any]:
+    """Execute the supervised baseline training & evaluation pipeline across chronological splits.
+
+    Sequence:
+    STEP 1: Load training data (2019–2022).
+    STEP 2: Fit StandardScaler ONLY on training data.
+    STEP 3: Prepare scaled training matrix for linear model.
+    STEP 4: Fit LogisticRegression through fit_linear_baseline_with_fallback.
+    STEP 5: Train RandomForest on positive-preserving sample (rf_target_total rows).
+    STEP 6: Train HistGradientBoosting on unscaled features with balanced weights.
+    STEP 7: Load validation data (2023).
+    STEP 8: Generate probability predictions for each trained model.
+    STEP 9: Compute validation metrics for each model.
+    STEP 10: For each model independently, tune threshold on 2023 only.
+    STEP 11: Select champion (highest PR-AUC, tie -> highest F1, tie -> lexicographical name).
+    STEP 12: Freeze champion, threshold, scaler/model state. Release validation matrix.
+    STEP 13: Load 2024 test data.
+    STEP 14: Generate ONE champion probability prediction pass.
+    STEP 15: Evaluate 2024 using the frozen threshold.
+    """
+    # STEP 1: Load training data
+    X_train, y_train, train_meta = load_split_matrix(
+        years=train_years,
+        base_dir=base_dir,
+        chunk_size=chunk_size,
+    )
+
+    # STEP 2: Fit StandardScaler strictly on training data
+    scaler = fit_linear_scaler(X_train)
+
+    # STEP 3: Prepare scaled training matrix for linear model
+    X_train_scaled = prepare_model_input(X_train, "linear", scaler=scaler)
+
+    # STEP 4: Fit Linear baseline with deterministic fallback
+    linear_model, linear_meta = fit_linear_baseline_with_fallback(
+        X_train_scaled, y_train, random_state=random_state
+    )
+    del X_train_scaled
+    gc.collect()
+
+    # STEP 5: Train RandomForest with positive-preserving sampling
+    X_rf, y_rf, rf_meta = sample_rf_training_data(
+        X_train, y_train, target_total=rf_target_total, random_state=random_state
+    )
+    rf_model = build_random_forest(random_state=random_state)
+    rf_model.fit(X_rf, y_rf)
+    del X_rf, y_rf
+    gc.collect()
+
+    # STEP 6: Train HistGradientBoosting on raw unscaled features
+    hgb_model = fit_hist_gradient_boosting(X_train, y_train, random_state=random_state)
+    del X_train, y_train
+    gc.collect()
+
+    # STEP 7: Load validation data (2023)
+    X_val, y_val, val_meta = load_split_matrix(
+        years=val_years,
+        base_dir=base_dir,
+        chunk_size=chunk_size,
+    )
+
+    # STEP 8: Generate probability predictions for each trained model
+    X_val_scaled = prepare_model_input(X_val, "linear", scaler=scaler)
+    linear_val_proba = get_model_probabilities(linear_model, X_val_scaled)
+    del X_val_scaled
+
+    rf_val_proba = get_model_probabilities(rf_model, X_val)
+    hgb_val_proba = get_model_probabilities(hgb_model, X_val)
+
+    # STEP 9 & 10: Compute validation metrics & tune threshold for each model independently
+    model_probas: Dict[str, np.ndarray] = {
+        "linear": linear_val_proba,
+        "random_forest": rf_val_proba,
+        "hist_gradient_boosting": hgb_val_proba,
+    }
+
+    validation_results: Dict[str, Dict[str, Any]] = {}
+    validation_thresholds: Dict[str, float] = {}
+
+    for name, proba in model_probas.items():
+        thresh, _ = tune_validation_threshold(
+            y_val, proba, precision_floor=precision_floor, num_thresholds=num_thresholds
+        )
+        metrics = compute_evaluation_metrics(y_val, proba, threshold=thresh)
+        metrics["selected_threshold"] = thresh
+        validation_results[name] = metrics
+        validation_thresholds[name] = thresh
+
+    # STEP 11: Select champion model
+    champion_selection = select_champion_model(validation_results)
+    champ_name = champion_selection["champion_name"]
+
+    models_dict = {
+        "linear": linear_model,
+        "random_forest": rf_model,
+        "hist_gradient_boosting": hgb_model,
+    }
+    champion_model = models_dict[champ_name]
+    frozen_threshold = validation_thresholds[champ_name]
+    champion_selection["frozen_threshold"] = frozen_threshold
+    champion_selection["champion_model_type"] = champ_name
+    champion_selection["champion_selection_rationale"] = (
+        f"Selected '{champ_name}' with highest validation PR-AUC ({champion_selection['champion_pr_auc']:.4f}), "
+        f"tie-breaking on F1 ({champion_selection['champion_f1']:.4f}) and lexicographical model ordering."
+    )
+
+    # STEP 12: Freeze champion, threshold, scaler/model state; release validation memory
+    del X_val, y_val, linear_val_proba, rf_val_proba, hgb_val_proba, model_probas
+    gc.collect()
+
+    # STEP 13: Load 2024 test data
+    X_test, y_test, test_meta = load_split_matrix(
+        years=test_years,
+        base_dir=base_dir,
+        chunk_size=chunk_size,
+    )
+
+    # STEP 14: Generate ONE champion probability prediction pass
+    if champ_name == "linear":
+        X_test_input = prepare_model_input(X_test, "linear", scaler=scaler)
+    else:
+        X_test_input = X_test
+
+    champ_test_proba = get_model_probabilities(champion_model, X_test_input)
+    if champ_name == "linear":
+        del X_test_input
+    del X_test
+    gc.collect()
+
+    # STEP 15: Evaluate 2024 using the frozen threshold
+    test_metrics = evaluate_temporal_test(y_test, champ_test_proba, frozen_threshold=frozen_threshold)
+    del y_test, champ_test_proba
+    gc.collect()
+
+    # Build evaluation summary JSON metadata
+    evaluation_summary: Dict[str, Any] = {
+        "methodology_disclosure": "SAME-DAY HISTORICAL CLASSIFICATION / ENGINEERED-LABEL RULE-REPLICATION",
+        "disclosure_note": (
+            "This baseline model evaluates historical co-occurrence on the Guwahati–Imphal corridor "
+            "using engineered disruption proxy labels. It does not represent real-world road-closure prediction "
+            "or future forecasting."
+        ),
+        "feature_contract": {
+            "feature_schema": list(CANONICAL_FEATURES),
+            "feature_count": len(CANONICAL_FEATURES),
+        },
+        "dataset_splits": {
+            "train_years": list(train_meta["years"]),
+            "validation_year": list(val_meta["years"]),
+            "test_year": list(test_meta["years"]),
+            "train_rows": train_meta["row_count"],
+            "train_positives": train_meta["positive_count"],
+            "train_negatives": train_meta["negative_count"],
+            "train_prevalence": train_meta["prevalence"],
+            "val_rows": val_meta["row_count"],
+            "val_positives": val_meta["positive_count"],
+            "val_negatives": val_meta["negative_count"],
+            "val_prevalence": val_meta["prevalence"],
+            "test_rows": test_meta["row_count"],
+            "test_positives": test_meta["positive_count"],
+            "test_negatives": test_meta["negative_count"],
+            "test_prevalence": test_meta["prevalence"],
+        },
+        "random_seed": int(random_state),
+        "rf_sampling": {
+            "total_sampled_rows": rf_meta["total_sampled_rows"],
+            "positive_sampled_rows": rf_meta["positive_sampled_rows"],
+            "negative_sampled_rows": rf_meta["negative_sampled_rows"],
+            "sampled_prevalence": rf_meta["sampled_prevalence"],
+            "random_seed": rf_meta["random_seed"],
+        },
+        "linear_model_execution": {
+            "primary_model_attempted": linear_meta["primary_model_attempted"],
+            "model_type_used": linear_meta["model_type_used"],
+            "fallback_occurred": linear_meta["fallback_occurred"],
+            "fallback_reason": linear_meta["fallback_reason"],
+            "random_seed": linear_meta["random_seed"],
+        },
+        "validation_metrics": validation_results,
+        "validation_thresholds": validation_thresholds,
+        "champion_selection": champion_selection,
+        "frozen_threshold": float(frozen_threshold),
+        "test_metrics_2024": test_metrics,
+        "environment": {
+            "python_version": sys.version,
+            "platform": platform.platform(),
+        },
+    }
+
+    report_md = generate_model_comparison_report(evaluation_summary)
+
+    pipeline_results: Dict[str, Any] = {
+        "scaler": scaler,
+        "models": models_dict,
+        "validation_results": validation_results,
+        "validation_thresholds": validation_thresholds,
+        "champion_selection": champion_selection,
+        "champion_name": champ_name,
+        "champion_model": champion_model,
+        "frozen_threshold": float(frozen_threshold),
+        "test_metrics": test_metrics,
+        "evaluation_summary": evaluation_summary,
+        "model_comparison_report": report_md,
+        "artifacts_written": {},
+    }
+
+    if save_artifacts:
+        written = save_pipeline_artifacts(pipeline_results, output_dir=output_dir)
+        pipeline_results["artifacts_written"] = written
+
+    return pipeline_results
+
+
+if __name__ == "__main__":
+    # Module remains strictly side-effect free on import and script invocation.
+    # To run orchestration, import and call run_training_pipeline() explicitly.
+    pass
