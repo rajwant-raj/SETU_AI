@@ -133,16 +133,15 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ### ML / EVALUATION
 
-| Item | Status | Notes |
-|---|---|---|
-| Final training dataset | ⏳ LATER | Build only after deterministic loop is stable |
-| `disruption_proxy` label | ⏳ LATER | Derived prototype label; never claim it as observed road-closure ground truth |
-| Logistic Regression baseline | ⏳ LATER | First ML baseline |
-| Random Forest comparison | ⏳ LATER | Compare against baseline |
-| LightGBM baseline | ⏳ LATER | Structured tabular benchmark |
-| Temporal CV split | ⏳ LATER | Train: 2019-01-01 to 2023-06-30, Val: 2023-07-01 to 2023-12-31, Test: 2024-01-01 to 2024-12-31 |
-| Spatial-holdout evaluation | ⏳ LATER | Evaluate on unseen roads/coordinates |
-| Decision-layer integration | ⏳ LATER | Connect model outputs back to operational decisions |
+| Item | Status | Checkpoint | Notes |
+|---|---|---:|---|
+| ML Dataset Construction | ✅ COMPLETE | 18 | Pure standard-library ML dataset builder implemented; test-first; 16 Checkpoint 18 tests passing; 333 total repository tests passing; 8,007 road segments; 40 weather stations resolved; 2019-01-01 through 2024-12-31; exact 17,551,344 segment-day rows generated; six annual CSV partitions generated; dataset_metadata.json generated; exact canonical 30-column schema validated; zero duplicate (segment_id, date) combinations; deterministic row ordering validated; leakage audit passed; derived disruption_proxy provenance contract preserved; disaster condition (a) inactive because local disaster directory is empty (no fabricated events); compileall passed; git diff --check passed; zero new external dependencies; no external API calls; no ML training performed; no ML inference implemented; deviation audit PASS |
+| Logistic Regression baseline | ⏳ LATER | 19 | First ML baseline in Checkpoint 19 |
+| Random Forest comparison | ⏳ LATER | 19 | Compare against baseline in Checkpoint 19 |
+| XGBoost tabular benchmark | ⏳ LATER | 19 | Structured tabular benchmark in Checkpoint 19 |
+| Temporal CV split | ⏳ LATER | 19 | Chronological split: Train 2019–2022, Val 2023, Test 2024 |
+| Spatial-holdout evaluation | ⏳ LATER | 19 | Evaluate on unseen roads/coordinates |
+| Decision-layer integration | ⏳ LATER | 20 | Connect model outputs back to operational decisions |
 
 ### INTEGRATION / PRODUCT LOOP
 
@@ -159,7 +158,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 17 — Live Weather Integration into Risk complete**
+**Checkpoint 18 — ML Dataset Construction complete**
 
 Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
@@ -292,11 +291,39 @@ Completed (Checkpoint 17 — Live Weather Integration into Risk):
 - No changes to src/routing/route_ranking.py
 - No ML, LLM, RAG, Redis, Kafka, FastAPI, databases, or external routing services
 
+Completed (Checkpoint 18 — ML Dataset Construction):
+- Pure standard-library streaming dataset builder implemented (`src/data/processing/build_ml_dataset.py`) using csv, json, math, datetime, pathlib, collections (zero pandas, zero numpy, zero networkx)
+- Full spatial and temporal coverage: all 8,007 eligible core segments across 2,192 consecutive days (2019-01-01 through 2024-12-31)
+- Exact Cartesian structural product achieved: 17,551,344 segment-day rows generated without fabricating or omitting any records
+- Six annual CSV partitions written to `datasets/processed/ml/ml_dataset_YYYY.csv` (gitignored, ~2.68 GB total, ~446 MB per partition)
+- Exact canonical 30-column schema validated across every partition
+- Deterministic spatial midpoint density proxy (`local_segment_density_proxy` in `connectivity_degree`) using 0.01 deg spatial hashing; order-invariant and pure stdlib
+- Positional 1-to-1 array mapping for all 40 weather stations (`WX-001` through `WX-040`) from Open-Meteo batch JSON archives, avoiding coordinate snapping collisions
+- Deterministic many-to-one road-to-station nearest mapping via Haversine distance with lexicographical tie-breaking for equidistant points
+- Canonical `disruption_proxy` v0.1 binary rule strictly implemented: condition (a) disaster proximity, condition (b) precip >= 50mm, condition (c) wind gust >= 65km/h, condition (d) accessibility < 0.40 & precip >= 25mm
+- Auxiliary bounded continuous disruption risk index in [0.0, 1.0]
+- Honest label provenance contract: `label_type = "derived"`, `label_source = "GDACS + Open-Meteo + OSM"`, `label_derivation_method = "deterministic_threshold_rule_v0.1"`
+- Condition (a) documented as inactive due to empty local disaster directory (`datasets/raw/disasters`); zero synthetic disaster events fabricated
+- Explicit honesty disclosures in metadata and code: `disruption_proxy` is an engineered physical hazard indicator, never claimed as observed road closure, police confirmation, or traffic standstill ground truth
+- Same-day historical classification framing: uses same-day historical weather; explicitly not described as genuine future forecasting
+- Zero-leakage guarantees: downstream Risk Engine outputs (`risk_score`, `risk_band`), post-hoc delay ratios (`current_delay_ratio`), and future-day weather are strictly excluded
+- Zero duplicate `(segment_id, date)` combinations; deterministic row ordering sorted by `date` (asc), then `segment_id` (asc)
+- Actual empirical label prevalence computed and recorded in `dataset_metadata.json`: 439,916 total positive labels (overall prevalence: 2.5065%, yearly range: 1.6013% to 3.1568%)
+- Test-first implementation: 16 Checkpoint 18 tests passing; 333 total repository tests passing
+- compileall passed cleanly; git diff --check passed cleanly
+- Zero new external dependencies introduced; zero external API calls during generation
+- No ML model training performed; no ML inference implemented
+
+ML Training Guardrail:
+- Checkpoint 18 is strictly dataset construction; no training or inference has been performed.
+- Checkpoint 19 (ML Training + Evaluation) is now the next approved task.
+- All subsequent experiments in Checkpoint 19 must evaluate models as proof-of-pipeline threshold classifiers on same-day historical data, without claiming real-world physical road-closure forecasting accuracy.
+
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 18 — ML dataset construction
+Checkpoint 19 — ML Training + Evaluation
 
 ---
 
