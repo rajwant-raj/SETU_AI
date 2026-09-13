@@ -13,6 +13,8 @@ import csv
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 from typing import Any, Dict, List
 import unittest
@@ -251,10 +253,34 @@ class TestMLTrainingOrchestration(unittest.TestCase):
         self.assertEqual(champ["total_candidates_evaluated"], 3)
 
     def test_08_no_artifact_directory_on_import(self) -> None:
-        """Verify importing or accessing src.ml.train_models does NOT create models/ directory."""
-        repo_models = Path("models")
-        # models/ should not exist prior to training run
-        self.assertFalse(repo_models.exists(), "models/ should not exist prior to training run")
+        """Verify importing src.ml and src.ml.train_models does NOT create a models directory."""
+        with tempfile.TemporaryDirectory(prefix="setu_test_import_") as isolated_cwd:
+            isolated_models = Path(isolated_cwd) / "models"
+            self.assertFalse(isolated_models.exists(), "Isolated test path must not exist initially")
+
+            repo_root = str(Path(__file__).resolve().parent.parent)
+            code = (
+                f"import sys\n"
+                f"sys.path.insert(0, {repo_root!r})\n"
+                f"import src.ml\n"
+                f"import src.ml.train_models\n"
+            )
+            res = subprocess.run(
+                [sys.executable, "-c", code],
+                cwd=isolated_cwd,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res.returncode, 0, f"Import subprocess failed: {res.stderr}")
+            self.assertFalse(
+                isolated_models.exists(),
+                "Importing src.ml or src.ml.train_models must NOT create a models/ directory in cwd",
+            )
+            self.assertEqual(
+                list(Path(isolated_cwd).iterdir()),
+                [],
+                "Importing module must remain strictly side-effect free and create zero files/directories",
+            )
 
     def test_09_artifact_path_and_saving_behavior(self) -> None:
         """Verify save_pipeline_artifacts creates output directory and writes all 7 approved files."""
