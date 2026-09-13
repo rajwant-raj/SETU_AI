@@ -381,7 +381,7 @@ Completed (Checkpoint 20 — Decision-Layer Integration / ML Inference Service):
 - Bytecode compilation clean (`compileall src tests`)
 - `git diff --check` clean with zero whitespace or line-ending errors
 - Zero new external dependencies introduced
-- Zero model artifacts tracked in Git (git status remains clean; `.gitignore` line 40 enforces `models/`)
+- Zero model artifacts tracked in Git (git status clean of tracked/model artifacts; `.gitignore` line 40 enforces `models/`; pre-existing `src/IntelligencePage.jsx` and `src/IntelligencePage.scss` remain intentionally untracked)
 
 Deviation audit:
 PASS

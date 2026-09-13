@@ -87,7 +87,7 @@ CURRENT CHECKPOINT:
 Checkpoint 20 — Decision-Layer Integration / ML Inference Service COMPLETE
 
 NEXT APPROVED CHECKPOINT:
-Checkpoint 21 — Real-Time Alert & Incident Ingestion System
+Checkpoint 21 — MERN Backend Intelligence Boundary / API Integration
 ```
 
 ---
@@ -554,16 +554,16 @@ The trained disruption prediction champion (Random Forest) is integrated into th
 
 ```text
 NEXT APPROVED CHECKPOINT:
-Checkpoint 21 — Real-Time Alert & Incident Ingestion System
+Checkpoint 21 — MERN Backend Intelligence Boundary / API Integration
 ```
 
 ### Objective & Scope
 
-Integrate real-time incident and alert ingestion into the SETU-AI event loop:
-- Ingest real-time hazard, incident, and road closure alerts.
-- Map external alert payloads to digital twin network segments.
-- Trigger the incident reroute loop with pending human approval.
-- Maintain human-in-the-loop governance across all operational commitments.
+Establish the stable API and integration boundary between the Python intelligence layer and the MERN backend:
+- Expose the deterministic engines, digital twin simulation, and in-process ML inference boundary to the backend service.
+- Maintain strict separation of concerns between operational intelligence and application presentation.
+- Preserve zero external runtime API dependencies across core intelligence evaluations.
+- Maintain human-in-the-loop governance for all reroute recommendations and state modifications.
 
 ---
 
