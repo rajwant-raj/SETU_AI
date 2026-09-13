@@ -80,13 +80,14 @@ The SIH26002 blueprint defines three core development milestones:
 17. **Live Weather Integration into Risk:** Dynamic weather severity injection into the deterministic risk scoring engine.
 18. **ML Dataset Construction:** Engineered feature store of **17,551,344 segment-day records** spanning 2019–2024 with deterministic disruption proxy.
 19. **ML Training + Evaluation:** Full supervised training pipeline across Logistic Regression, Random Forest, and HistGradientBoosting, with frozen holdout evaluation.
+20. **Decision-Layer Integration & ML Inference Service:** In-process inference engine exposing the Random Forest champion model at frozen threshold 0.30 over 24 canonical features, integrated as an opt-in auxiliary advisory in the reroute orchestration pipeline.
 
 ```text
 CURRENT CHECKPOINT:
-Checkpoint 19 — ML Training + Evaluation COMPLETE
+Checkpoint 20 — Decision-Layer Integration / ML Inference Service COMPLETE
 
 NEXT APPROVED CHECKPOINT:
-Checkpoint 20 — Decision-Layer Integration / ML Inference Service
+Checkpoint 21 — Real-Time Alert & Incident Ingestion System
 ```
 
 ---
@@ -534,23 +535,35 @@ Live Tracking
 
 ---
 
-## Next — Checkpoint 20
+## Checkpoint 20 — Decision-Layer Integration & ML Inference Service
+
+The trained disruption prediction champion (Random Forest) is integrated into the decision and rerouting pipeline via a dedicated in-process inference boundary (`src/ml/inference.py`):
+
+- **In-Process Inference Engine:** Implemented via `DisruptionInferenceEngine` in `src/ml/inference.py` (exported through `src/ml/__init__.py`). Runs synchronously without external HTTP servers, microservices, daemons, or runtime network calls.
+- **Champion Artifact & Raw Evaluation:** Consumes the frozen Checkpoint 19 Random Forest champion artifact (`models/random_forest.joblib`). Evaluates raw, unscaled features directly into `predict_proba` without applying `StandardScaler` (matching the tree-based training protocol).
+- **Exact Canonical Feature Contract:** Strictly validates and constructs the exact 24 CP19 canonical feature inputs in immutable order. Uses canonical `WMO_CODE_SEVERITY` mapping for weather inputs without synthetic fallback fabrication.
+- **Frozen Classification Threshold:** Applies the frozen 0.30 decision threshold selected in Checkpoint 19 on raw probabilities before rounding for display.
+- **Physical Length-Weighted Route Aggregation:** Aggregates segment predictions across route alternatives using physical segment lengths (`length_weighted_mean_disruption_probability`), alongside `peak_segment_disruption_probability`.
+- **Opt-In Auxiliary Integration:** Exposed in `create_reroute_recommendation(..., include_ml_assessment=False)`. By default (`include_ml_assessment=False`), Checkpoint 16 deterministic reroute behavior is 100% preserved.
+- **Strict Protection of Deterministic Core:** ML output is strictly advisory and attached as auxiliary metadata. It never modifies deterministic risk scores, candidate generation, route ranking metrics, candidate ordering, blockage confirmation, or the human approval requirement (`PENDING_APPROVAL`).
+- **Methodology Disclosure:** *Random Forest predict_proba disruption probabilities: These probabilities are model outputs for the engineered-label classification task and are not calibrated or validated probabilities of real-world road closure.*
+
+---
+
+## Next — Checkpoint 21
 
 ```text
 NEXT APPROVED CHECKPOINT:
-Checkpoint 20 — Decision-Layer Integration / ML Inference Service
+Checkpoint 21 — Real-Time Alert & Incident Ingestion System
 ```
 
 ### Objective & Scope
 
-Expose the trained disruption model champion through a stable, controlled inference boundary that can be consumed by the risk engine and backend:
-
-- Consume the frozen champion model artifact (`models/random_forest.joblib`).
-- Accept segment-level environmental and infrastructural features.
-- Return calibrated disruption probabilities alongside feature attribution metadata.
-- Maintain the strict human-in-the-loop operational workflow.
-- Ensure zero external runtime API dependencies during inference.
-- Avoid introducing unnecessary microservice frameworks, brokers, or databases.
+Integrate real-time incident and alert ingestion into the SETU-AI event loop:
+- Ingest real-time hazard, incident, and road closure alerts.
+- Map external alert payloads to digital twin network segments.
+- Trigger the incident reroute loop with pending human approval.
+- Maintain human-in-the-loop governance across all operational commitments.
 
 ---
 

@@ -142,7 +142,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | HistGradientBoosting benchmark | ✅ COMPLETE | 19 | Fitted on full 11.7M population with balanced sample weights; Val PR-AUC 0.9991, ROC-AUC 1.0, F1 0.9849 at threshold 0.96 |
 | Temporal validation & test | ✅ COMPLETE | 19 | 2023 validation tuned thresholds and selected champion; 2024 held-out test evaluated once at frozen threshold 0.30 without retuning or retraining (PR-AUC 1.0, F1 1.0) |
 | Spatial-holdout evaluation | ⏳ LATER | — | Deferred to later evaluation milestone on unseen roads/coordinates |
-| Decision-layer integration | ⏳ NEXT | 20 | Connect model outputs back to operational decisions |
+| Decision-layer integration | ✅ COMPLETE | 20 | In-process Python inference component (DisruptionInferenceEngine) implemented; frozen Random Forest champion; frozen threshold 0.30; exact 24-feature schema; raw unscaled features; physical-length weighted route aggregation; auxiliary opt-in ML advisory; CP16 default deterministic reroute preserved; 16 inference tests, 6 integration tests, 381 total tests passing; compileall clean; git diff --check clean; deviation audit PASS |
 
 ### INTEGRATION / PRODUCT LOOP
 
@@ -357,11 +357,37 @@ Completed (Checkpoint 19 — ML Training + Evaluation):
 - 333 full repository regression tests passing across Checkpoints 1–18 in active `.venv` (Python 3.10.9, scikit-learn 1.6.1, numpy 2.2.6, scipy 1.15.3)
 - compileall clean; git diff --check clean
 
+Completed (Checkpoint 20 — Decision-Layer Integration / ML Inference Service):
+- In-process Python inference component and local service boundary implemented (`src/ml/inference.py`, exported in `src/ml/__init__.py`)
+- Encapsulated `DisruptionInferenceEngine` with cached champion model reuse (loaded once in memory, no per-inference reload)
+- Frozen Champion Random Forest (`models/random_forest.joblib`) evaluated at frozen decision threshold 0.30
+- Exact CP19 24-feature schema extracted in strict deterministic canonical order without fabrication, guessing, or silent substitution
+- Tree model scaler bypass verified: Random Forest consumes raw unscaled features directly (`StandardScaler` bypassed)
+- Canonical WMO weather code mapping strictly reused from `src.data.weather.weather_severity.WMO_CODE_SEVERITY`; zero duplicate WMO dictionaries
+- Strict weather code validation: missing, non-numeric, or unsupported WMO codes raise `InvalidWeatherInputError` (never silently converted to 0.0)
+- Thresholding strictly evaluated on raw probability (`raw_prob >= 0.30`), with rounding to 4 decimal places applied only on return/display
+- Physical length-weighted route aggregation strictly evaluated using actual physical `segment_length_km` (`length_weighted_mean_disruption_probability`) and `peak_segment_disruption_probability` (maximum individual segment probability)
+- Auxiliary opt-in integration into Checkpoint 16 orchestration via `include_ml_assessment: bool = False` default in `create_reroute_recommendation`
+- Existing CP16 deterministic reroute behavior 100% preserved as default when `include_ml_assessment=False`
+- When `include_ml_assessment=True`, attached auxiliary `ml_assessment` without altering ranking score, normalized utility, weights, candidate ordering, blockage status, or approval lifecycle
+- Route explanation layer extended to surface auxiliary `ml_advisory` when present while keeping the 5 core decision factors and narrative untouched
+- Explicit failure degradation: when model artifact is absent or fails, records machine-readable `status: "UNAVAILABLE"` with reason provenance, allowing deterministic decision-support to proceed without interruption
+- Zero synthetic or disguised ML probability fallbacks
+- Protected deterministic files strictly untouched: `src/risk/risk_engine.py`, `src/impact/network_impact.py`, `src/accessibility/accessibility_scorer.py`, `src/eta/eta_engine.py`, `src/routing/route_candidates.py`, `src/routing/route_ranking.py`
+- Human approval invariant preserved: AI recommends -> Backend orchestrates -> Operator approves (recommendation remains `PENDING_APPROVAL`, operational route unchanged before explicit approval)
+- 16/16 Checkpoint 20 inference contract tests passing (`tests/test_ml_inference.py`)
+- 6/6 Checkpoint 20 decision integration tests passing (`tests/test_ml_decision_integration.py`)
+- 381/381 total repository regression tests passing across Checkpoints 1–20 (359 existing + 22 new)
+- Bytecode compilation clean (`compileall src tests`)
+- `git diff --check` clean with zero whitespace or line-ending errors
+- Zero new external dependencies introduced
+- Zero model artifacts tracked in Git (git status remains clean; `.gitignore` line 40 enforces `models/`)
+
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 20 — Decision-Layer Integration / ML Inference Service
+Checkpoint 21 — MERN Backend Intelligence Boundary / API Integration
 
 ---
 
@@ -437,4 +463,4 @@ A task is **not complete** until:
 
 ### Last updated
 
-2026-09-13
+2026-09-14

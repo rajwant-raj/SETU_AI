@@ -459,7 +459,7 @@ def explain_ranked_route(
             f"{tradeoffs['narrative']}"
         )
 
-    return {
+    explanation_result: Dict[str, Any] = {
         "route_id": route_id,
         "rank": rank,
         "ranking_score": ranking_score,
@@ -470,6 +470,11 @@ def explain_ranked_route(
         "risk_reason_codes": risk_reason_codes,
         "honesty_disclosure": HONESTY_DISCLOSURE,
     }
+
+    if "ml_assessment" in validated_target and isinstance(validated_target["ml_assessment"], Mapping):
+        explanation_result["ml_advisory"] = dict(validated_target["ml_assessment"])
+
+    return explanation_result
 
 
 def explain_ranked_routes(

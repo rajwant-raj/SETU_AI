@@ -49,6 +49,18 @@ from src.ml.train_models import (
     select_champion_model,
     tune_validation_threshold,
 )
+from src.ml.inference import (
+    FROZEN_DECISION_THRESHOLD,
+    DisruptionInferenceEngine,
+    MLInferenceRuntimeError,
+    MLInferenceValidationError,
+    ModelArtifactNotFoundError,
+    construct_feature_vector_from_context,
+    get_default_inference_engine,
+    predict_route_disruption,
+    predict_segment_disruption,
+    predict_segments_disruption,
+)
 
 __all__ = [
     "CANONICAL_FEATURES",
@@ -91,4 +103,14 @@ __all__ = [
     "save_pipeline_artifacts",
     "check_pipeline_resource_diagnostics",
     "run_training_pipeline",
+    "DisruptionInferenceEngine",
+    "ModelArtifactNotFoundError",
+    "MLInferenceValidationError",
+    "MLInferenceRuntimeError",
+    "FROZEN_DECISION_THRESHOLD",
+    "predict_segment_disruption",
+    "predict_segments_disruption",
+    "predict_route_disruption",
+    "construct_feature_vector_from_context",
+    "get_default_inference_engine",
 ]

@@ -168,6 +168,103 @@ def _resolve_route_endpoints(
     return orig_dict, dest_dict
 
 
+def _evaluate_ml_advisory(
+    ranked_candidates: List[Dict[str, Any]],
+    network_by_id: Mapping[str, Dict[str, Any]],
+    current_route: Mapping[str, Any],
+    *,
+    segment_contexts: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    observation_date: Optional[Any] = None,
+    ml_engine: Optional[Any] = None,
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """Opt-in auxiliary ML disruption assessment helper for ranked candidate routes.
+
+    Crucial:
+    - Does NOT modify ranking_score, normalized_scores, weights_applied, or candidate ordering.
+    - If model artifact is missing or prediction fails, records machine-readable 'UNAVAILABLE' status.
+    - Zero synthetic probability fabrication.
+    """
+    try:
+        from src.ml.inference import (
+            DisruptionInferenceEngine,
+            ModelArtifactNotFoundError,
+            get_default_inference_engine,
+        )
+    except ImportError as exc:
+        summary_unavail = {"status": "UNAVAILABLE", "reason": f"ML package import error: {exc}"}
+        for c in ranked_candidates:
+            c["ml_assessment"] = summary_unavail
+        return ranked_candidates, summary_unavail
+
+    engine = ml_engine
+    if engine is None:
+        try:
+            engine = get_default_inference_engine()
+        except Exception as exc:
+            summary_unavail = {"status": "UNAVAILABLE", "reason": f"ML engine init error: {exc}"}
+            for c in ranked_candidates:
+                c["ml_assessment"] = summary_unavail
+            return ranked_candidates, summary_unavail
+
+    resolved_date = observation_date
+    if resolved_date is None:
+        resolved_date = current_route.get("date") or current_route.get("timestamp") or "2024-06-15"
+
+    route_assessments: Dict[str, Any] = {}
+    any_available = False
+
+    for cand in ranked_candidates:
+        rid = cand["route_id"]
+        cand_seg_contexts: Dict[str, Dict[str, Any]] = {}
+        missing_context = False
+        missing_reason = ""
+
+        seg_list = cand.get("segments", [])
+        if not seg_list and "segment_ids" in cand:
+            seg_list = [{"segment_id": sid} for sid in cand["segment_ids"]]
+
+        for s in seg_list:
+            sid = str(s.get("segment_id", "")).strip()
+            if segment_contexts is not None and sid in segment_contexts:
+                cand_seg_contexts[sid] = dict(segment_contexts[sid])
+            elif sid in network_by_id:
+                base_seg = dict(network_by_id[sid])
+                if "weather" in current_route and "weather" not in base_seg:
+                    base_seg["weather"] = current_route["weather"]
+                elif "weather" in s and "weather" not in base_seg:
+                    base_seg["weather"] = s["weather"]
+                cand_seg_contexts[sid] = base_seg
+            else:
+                missing_context = True
+                missing_reason = f"Segment '{sid}' missing from network and segment_contexts"
+                break
+
+        if missing_context:
+            route_assessments[rid] = {"status": "UNAVAILABLE", "reason": missing_reason}
+            cand["ml_assessment"] = route_assessments[rid]
+            continue
+
+        try:
+            cand_eval = engine.predict_route_disruption(cand, cand_seg_contexts, date=resolved_date)
+            cand_eval["status"] = "AVAILABLE"
+            route_assessments[rid] = cand_eval
+            cand["ml_assessment"] = cand_eval
+            any_available = True
+        except ModelArtifactNotFoundError as exc:
+            route_assessments[rid] = {"status": "UNAVAILABLE", "reason": f"Model artifact not found: {exc}"}
+            cand["ml_assessment"] = route_assessments[rid]
+        except Exception as exc:
+            route_assessments[rid] = {"status": "UNAVAILABLE", "reason": f"ML inference error: {exc}"}
+            cand["ml_assessment"] = route_assessments[rid]
+
+    overall_status = "AVAILABLE" if any_available else "UNAVAILABLE"
+    summary_envelope = {
+        "status": overall_status,
+        "route_assessments": route_assessments,
+    }
+    return ranked_candidates, summary_envelope
+
+
 def create_reroute_recommendation(
     incident: Mapping[str, Any],
     network_segments: Iterable[Mapping[str, Any]],
@@ -182,6 +279,10 @@ def create_reroute_recommendation(
     vehicle_speed_factor: Optional[float] = None,
     custom_ranking_weights: Optional[Mapping[str, float]] = None,
     recommendation_id: Optional[str] = None,
+    include_ml_assessment: bool = False,
+    ml_engine: Optional[Any] = None,
+    segment_contexts: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    observation_date: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Generate a structured, deterministic reroute recommendation for human operator approval.
 
@@ -324,6 +425,18 @@ def create_reroute_recommendation(
     except RouteRankingValidationError as exc:
         raise IncidentRerouteValidationError(f"Route ranking failed: {exc}") from exc
 
+    # 6b. Opt-in Auxiliary ML Disruption Assessment (CP20)
+    ml_summary: Optional[Dict[str, Any]] = None
+    if include_ml_assessment:
+        ranked_candidates, ml_summary = _evaluate_ml_advisory(
+            ranked_candidates,
+            network_by_id,
+            current_route,
+            segment_contexts=segment_contexts,
+            observation_date=observation_date,
+            ml_engine=ml_engine,
+        )
+
     # 7. Explain Ranked Routes
     try:
         explanations = explain_ranked_routes(ranked_candidates)
@@ -348,7 +461,7 @@ def create_reroute_recommendation(
 
     recommended_route_id = ranked_candidates[0]["route_id"]
 
-    return {
+    rec_result: Dict[str, Any] = {
         "recommendation_id": rec_id,
         "incident": dict(impact_result["incident"]),
         "impacted_segment_ids": impacted_segment_ids,
@@ -362,6 +475,12 @@ def create_reroute_recommendation(
         "approval_required": True,
         "honesty_disclosure": REROUTE_HONESTY_DISCLOSURE,
     }
+
+    if include_ml_assessment and ml_summary is not None:
+        rec_result["ml_assessment"] = ml_summary
+
+    return rec_result
+
 
 
 def approve_reroute_recommendation(
