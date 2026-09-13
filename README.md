@@ -1,496 +1,388 @@
 # SETU
 
-### Intelligent, disruption-aware logistics decision support for the North Eastern Region
+### AI-Based Smart Logistics & Accessibility Intelligence Platform for the North Eastern Region
 
-**SETU** is an intelligent logistics decision-support platform designed for transportation through disruption-prone terrain in the North Eastern Region of India.
+SETU is a disruption-aware logistics decision-support platform designed around **SIH26002 — AI-Based Smart Logistics and Accessibility Intelligence Platform for North Eastern Region (NER)**.
 
-SETU is built around a simple operational question:
+SETU is not simply a route planner. It is designed to help logistics operators understand **what is happening to a transportation network, how that affects a shipment, what alternatives are practical, why one alternative is better, and whether the operator should approve the change**.
 
-> **When something changes on a route, what is affected, how risky is it, what alternatives exist, how do they compare, and why should an operator choose one?**
+> **SETU turns a changing road condition into an evidence-backed, explainable and human-approved logistics decision.**
 
-A conventional routing system can answer **“What is the shortest route?”**. Real logistics operations need a much richer answer. A route may be geographically available but operationally undesirable because of rainfall, terrain, infrastructure limitations, an incident, increased delay, or network-level consequences.
+The core operating principle is:
 
-SETU therefore combines **road-network intelligence, weather, risk, accessibility, ETA, route alternatives, machine-learning disruption assessment, explainable recommendations, secure AI processing, and human approval** into one decision loop.
-
-The core principle is:
-
-**AI recommends → Backend orchestrates → Operator approves → SETU executes the decision.**
-
-SETU is designed for the **SIH26002 logistics problem statement**, with a focus on making route decisions more disruption-aware, explainable, secure, and operationally useful.
+**AI recommends → Backend orchestrates → Operator approves → SETU executes.**
 
 ---
 
-## 1. The Problem We Are Solving
+## 1. The Problem Statement
 
-Logistics routes in the North Eastern Region can be affected by heavy rainfall, difficult terrain, road conditions, incidents, accessibility constraints, delays, and limited network connectivity.
+### SIH26002
 
-The problem is therefore not simply finding a path between two locations. The real operational problem is:
+**Title:** AI-Based Smart Logistics and Accessibility Intelligence Platform for North Eastern Region (NER)  
+**Organization:** Ministry of Development of North Eastern Region (MDoNER)  
+**Theme:** Transportation & Logistics
 
-- understanding what part of the road network is affected;
-- estimating the severity and operational risk of the disruption;
-- understanding infrastructure accessibility;
-- estimating additional travel time and delay;
-- finding practical alternative routes;
-- comparing alternatives using more than distance alone;
-- explaining why one route is preferable;
-- protecting sensitive shipment, vehicle, location and operational data; and
-- ensuring that an AI recommendation does not silently become an operational decision.
+### The problem in simple words
 
-SETU treats these as one connected decision problem instead of separate tools.
+The North Eastern Region faces major logistics and accessibility challenges because transportation networks operate through **difficult terrain, extreme weather, limited connectivity and frequent road disruptions**.
+
+Landslides, floods, heavy rainfall, road damage, incidents and infrastructure gaps can make a route that was previously usable slow, risky or inaccessible. When essential goods such as **medicines, food supplies, construction materials and agricultural produce** are moving toward remote districts, these disruptions can lead to:
+
+- delayed deliveries;
+- supply shortages;
+- increased transportation cost;
+- unreliable travel-time estimates;
+- poor visibility of remote routes;
+- slow response to road disruptions; and
+- difficulty choosing an appropriate alternative route.
+
+The original problem statement calls for an AI-enabled platform that combines **AI/ML, GIS mapping, weather data and real-time field inputs** to improve transportation visibility and planning across the NER.
+
+It specifically expects capabilities around:
+
+1. monitoring road, bridge and transport accessibility;
+2. predicting possible route disruptions;
+3. suggesting alternate routes and estimating delays;
+4. GPS-based vehicle tracking;
+5. alerts for blocked roads, inaccessible regions, delayed deliveries and high-risk corridors;
+6. geo-tagged field reports, photographs and incident updates;
+7. centralized logistics and accessibility dashboards; and
+8. multilingual notifications and offline synchronization for low-network areas.
+
+### What is missing from a conventional routing system?
+
+A normal routing engine can answer:
+
+> **“What is the shortest route from A to B?”**
+
+But a logistics control room needs to answer a much larger set of questions:
+
+> **What changed?**  
+> **Which road segments are affected?**  
+> **How serious is the disruption?**  
+> **Can the road still be practically used?**  
+> **How much delay could it cause?**  
+> **What alternative routes exist?**  
+> **Which alternative is the best trade-off?**  
+> **Why is it better?**  
+> **Can the operator trust the recommendation enough to approve it?**
+
+SETU is built around this complete decision problem.
 
 ---
 
-## 2. Our Proposed Solution
+## 2. What We Are Building
 
-SETU turns a disruption into an **evidence-backed route decision**.
+SETU is a **full logistics intelligence and decision-support layer** connecting operational data, road-network intelligence, environmental conditions, AI/ML and human decision-making.
 
-When an incident or changing environmental condition enters the system, SETU can identify potentially affected road segments, assess risk and accessibility, estimate delay, generate alternative routes, compare them, add an ML disruption advisory, explain the trade-offs, and request human approval.
+It is structured into five major layers:
 
-The system deliberately separates **prediction, recommendation, operational authority, and security**.
+```text
+┌─────────────────────────────────────────────────────────┐
+│                    SETU APPLICATION                     │
+│  Shipments • Operators • Tracking • Dashboards • APIs  │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────┐
+│                LOGISTICS INTELLIGENCE                    │
+│ Impact • Risk • Accessibility • ETA • Weather • Routes │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────┐
+│                    AI / ML LAYER                         │
+│        Disruption Assessment + Route Advisory           │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────┐
+│             SECURE INTELLIGENCE LAYER                    │
+│        TEE • Attestation • Protected AI Processing      │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────┐
+│               DECISION & CONTROL LAYER                   │
+│ Explanation → Human Approval → Reroute → Tracking       │
+└─────────────────────────────────────────────────────────┘
+```
+
+The important architectural separation is:
+
+**Prediction ≠ Recommendation ≠ Operational Authority.**
+
+The AI can provide evidence and an advisory. The backend controls workflow. The authorized operator controls the final operational route change.
+
+---
+
+## 3. How SETU Solves the Problem
+
+When a disruption occurs, SETU converts it into a structured decision process.
 
 ```text
 Incident / Changing Condition
             │
             ▼
-     Network Impact
+     1. Network Impact
             │
             ▼
-   Risk + Weather +
-     Accessibility
+     2. Risk Assessment
+       + Weather
+       + Accessibility
             │
             ▼
-       ETA / Delay
+      3. ETA / Delay
             │
             ▼
-   Alternative Routes
+    4. Alternative Routes
             │
             ▼
-     Route Ranking
+      5. Route Ranking
             │
        ┌────┴────┐
-       │         │
        ▼         ▼
- Explanation   ML Disruption
-               Advisory
+ Explanation   ML Advisory
        │         │
        └────┬────┘
             ▼
-      Secure AI Boundary
-       / TEE Protection
+     Secure AI Boundary
+          / TEE
             │
             ▼
-     Human Approval
-            │
-      ┌─────┴─────┐
-      │           │
-   Approve      Reject
-      │           │
-      ▼           ▼
-   Reroute    Keep Current
-      │
-      ▼
+      Human Approval
+        /         \
+    Approve       Reject
+       │             │
+       ▼             ▼
+    Reroute      Keep Current
+       │
+       ▼
  Updated Operational State
 ```
 
-The important idea is that SETU does not ask an ML model to independently control a shipment. Intelligence produces evidence and recommendations; the application backend controls workflow; an authorized operator controls the final operational decision.
+### The result
+
+Instead of returning only a route, SETU can return a decision context containing:
+
+- affected network context;
+- risk and contributing factors;
+- weather severity;
+- infrastructure accessibility;
+- expected delay;
+- alternative routes;
+- route scores and trade-offs;
+- ML disruption advisory;
+- explanation; and
+- an explicit approval state.
 
 ---
 
-## 3. What SETU Provides
+## 4. SETU Product Components
 
-SETU is intended to give a logistics operator a **single decision-support view of a disruption** instead of requiring them to manually interpret several disconnected systems.
+### 4.1 Road Network Intelligence
 
-The platform brings together:
+SETU creates a structured road network from **OpenStreetMap (OSM)** data for the Guwahati–Imphal study corridor and surrounding network.
 
-- **Shipment and route context**
-- **Incident location and network impact**
-- **Potentially affected road segments**
-- **Risk level and contributing factors**
-- **Weather severity**
-- **Infrastructure accessibility**
-- **Estimated travel time and delay**
-- **Alternative route candidates**
-- **Route scores and trade-offs**
-- **ML-based disruption advisory**
-- **Human-readable explanations**
-- **Human approval before operational rerouting**
-- **Secure handling of sensitive operational and AI data**
+The core network contains **8,007 major-road segments**.
 
-The goal is not simply to tell an operator *where to go*. The goal is to make the reasoning, evidence, uncertainty, and trade-offs behind a route decision visible and controllable.
+This road graph is the physical foundation for accessibility analysis, network impact, ETA calculation and alternative route generation.
 
----
+### 4.2 Network Impact Engine
 
-## 4. Key Features
+A geolocated incident is projected onto the road network using spatial proximity and an impact radius.
 
-### 🛣️ Road Network Intelligence
+The engine identifies **potentially affected road segments**.
 
-SETU builds a structured road network from **OpenStreetMap (OSM)** data for the Guwahati–Imphal study corridor and surrounding network. The core network contains **8,007 major-road segments**.
-
-The network provides the physical foundation on which impact analysis, accessibility, ETA estimation, and route generation operate.
-
-### ⚠️ Network Impact Analysis
-
-A geolocated incident can be projected onto the road network using spatial proximity and an impact radius. SETU identifies **potentially affected segments** without automatically declaring them closed.
+A critical safety rule is:
 
 > **Potentially affected ≠ confirmed blocked.**
 
-This distinction is important because a spatially nearby incident does not necessarily mean that every nearby road is physically impassable.
+Being close to an incident does not automatically prove that a road is physically impassable. Explicit operational confirmation is required before a segment is treated as blocked.
 
-### 🌧️ Weather Intelligence
+### 4.3 Weather Intelligence
 
-Historical and live/cached weather pipelines provide precipitation, rainfall duration, wind, gust, temperature and WMO weather-code information that can contribute to route-risk assessment and ML features.
+SETU uses historical and live/cached weather information including:
 
-### 📊 Risk Assessment
+- precipitation;
+- rainfall duration;
+- temperature;
+- wind;
+- wind gusts; and
+- WMO weather codes.
 
-A deterministic risk engine combines incident severity, weather severity, accessibility risk, road-condition risk, network criticality and current delay into a normalized risk score with explicit risk bands.
+Weather contributes to deterministic risk assessment and to the ML feature set.
 
-The deterministic engine remains an authoritative operational calculation rather than allowing a learned model to silently replace it.
+### 4.4 Risk Engine
 
-### 🚧 Accessibility Scoring
+The deterministic Risk Engine combines:
 
-SETU evaluates infrastructure characteristics such as road class, surface and lane information to produce an **OSM-derived accessibility proxy**.
+- incident severity;
+- weather severity;
+- accessibility risk;
+- road-condition risk;
+- network criticality; and
+- current delay ratio.
 
-This represents mapped infrastructure characteristics. It is **not a claim of observed real-time physical passability**.
+The result is a normalized risk score with explicit risk bands:
 
-### ⏱️ ETA & Delay Estimation
+- `LOW`
+- `MEDIUM`
+- `HIGH`
+- `CRITICAL`
 
-The ETA engine calculates baseline and disruption-aware travel time for different vehicle profiles and can account for blocked segments and disruption-induced delay.
+The deterministic risk calculation remains authoritative. ML does not silently replace it.
 
-### 🗺️ Alternative Route Generation
+### 4.5 Accessibility Intelligence
 
-SETU generates multiple feasible route candidates over the road graph rather than relying on one shortest-path answer.
+SETU evaluates mapped infrastructure characteristics such as road class, surface, lanes and speed-related attributes to produce an **OSM-derived accessibility proxy**.
 
-### ⚖️ Route Ranking
+This is important to distinguish from real-world passability:
 
-Candidate routes are compared using deterministic factors including:
+> **Accessibility score = mapped infrastructure characteristics, not guaranteed real-time physical passability.**
 
-- ETA
-- Risk
-- Accessibility
-- Distance
-- Vehicle compatibility
+### 4.6 ETA & Delay Engine
 
-This makes route selection a transparent multi-factor decision rather than an opaque prediction.
+The ETA engine calculates baseline and disruption-aware travel time for different vehicle profiles.
 
-### 🧠 ML Disruption Advisory
+It considers road characteristics, speed assumptions, surface effects, vehicle profile and disruption effects, with explicit handling for blocked segments.
 
-A trained Random Forest model provides an additional disruption assessment for road segments. It is an **auxiliary decision signal**, not the authority for declaring roads blocked or changing routes.
+### 4.7 Alternative Route Generation
 
-### 💡 Explainable Recommendations
+SETU generates multiple feasible route candidates over the road graph rather than returning only one shortest path.
 
-SETU produces structured explanations showing the important factors and trade-offs behind a recommendation so that an operator can understand the reasoning before approving it.
+Explicitly confirmed blocked segments can be excluded from candidate generation.
 
-### 🔄 Digital Twin / What-If Simulation
+### 4.8 Route Ranking
 
-A lightweight in-memory Digital Twin provides state and event handling for fleet, shipment and network scenarios and supports isolated what-if evaluation without introducing unnecessary infrastructure.
+Candidate routes are compared using deterministic multi-factor scoring based on:
 
-### 👤 Human-in-the-Loop Rerouting
+- ETA;
+- risk;
+- accessibility;
+- distance; and
+- vehicle compatibility.
 
-Recommendations enter a `PENDING_APPROVAL` state. The operational route changes only after an authorized operator explicitly approves the recommendation.
+This allows SETU to answer a more useful question than “which route is shortest?”
 
-### 🔐 Secure AI Processing with a Trusted Execution Environment
+> **Which route provides the best operational trade-off for this situation?**
 
-SETU is designed to protect sensitive logistics and AI workloads with a **Trusted Execution Environment (TEE)** as part of its security architecture.
+### 4.9 Explainable Recommendations
 
-A TEE is a hardware-backed isolated execution environment in which sensitive computation can run separately from the normal host operating environment. The objective is to reduce the amount of sensitive information exposed to the host OS, hypervisor, administrators, or other workloads, while providing a way to cryptographically verify that approved code is running.
+SETU does not stop at a numerical score. It produces structured explanations describing the factors and trade-offs behind a recommendation.
 
-For SETU, the TEE is especially relevant because the intelligence layer may process sensitive operational information such as:
+The operator can therefore understand **why** one alternative is preferred.
 
-- shipment details;
-- vehicle and driver context;
-- GPS/location information;
-- incident information;
-- route plans and alternative routes;
-- operational timing and ETA information; and
-- ML model inputs and inference results.
+### 4.10 Digital Twin / What-If Simulation
 
-The intended security boundary is:
+A lightweight Digital Twin represents fleet, shipment, route and incident state and supports isolated what-if scenarios.
 
-```text
-                    SETU Backend
-                         │
-                 Authenticated Request
-                         │
-                         ▼
-              ┌─────────────────────┐
-              │   TEE Boundary      │
-              │                     │
-              │ Sensitive Inputs    │
-              │ Feature Construction│
-              │ ML Inference        │
-              │ Sensitive Decisions │
-              │ Key Material Access │
-              │                     │
-              └─────────┬───────────┘
-                        │
-                 Attested Result
-                        │
-                        ▼
-              Backend / Operator UI
-```
+This lets SETU evaluate potential route decisions without mutating the live operational state before approval.
 
-The TEE should not become a replacement for SETU's deterministic safety rules or human approval. It is a **security boundary around sensitive computation**.
+### 4.11 Human-in-the-Loop Rerouting
 
-#### What we should implement
+A route recommendation enters:
 
-The TEE design for SETU should include the following controls:
+`PENDING_APPROVAL`
 
-1. **Hardware-backed isolation**  
-   Run the protected inference workload inside a hardware-backed confidential-computing environment rather than treating a normal process boundary as sufficient protection.
+The operational route is not changed until an authorized operator explicitly approves the recommendation.
 
-2. **Remote attestation**  
-   Before releasing protected data or keys, a trusted verifier should be able to verify that the expected TEE workload is running. Attestation should bind the workload identity/version to the security decision.
-
-3. **Encrypted data in transit and at rest**  
-   TEE protection should complement, not replace, TLS and encrypted storage. Sensitive information should remain encrypted outside the protected execution boundary.
-
-4. **Minimal plaintext exposure**  
-   Shipment, GPS, incident and model-sensitive data should enter plaintext only where required for the protected computation. Logs, telemetry and debugging output must avoid leaking sensitive values.
-
-5. **Protected model and inference inputs**  
-   The ML model and sensitive feature vector should be handled inside the protected execution boundary where the deployment environment supports it. Model access should not expose unnecessary sensitive artifacts to the host.
-
-6. **Sealed / protected secrets**  
-   Keys, credentials or other sensitive inference secrets should be released to the workload only after the required attestation and authorization checks succeed.
-
-7. **Measured, versioned workload**  
-   The TEE workload should have a reproducible identity so that the verifier can distinguish an approved SETU inference build from an unexpected or modified workload.
-
-8. **Fail-closed security behavior**  
-   If attestation fails, the expected workload identity does not match, or required protected resources cannot be established, sensitive data should not be released to the protected workload.
-
-9. **No autonomous operational authority**  
-   Even inside a TEE, ML inference must not receive authority to silently reroute shipments. The secure computation produces evidence/advisory output; backend policy and authorized human approval remain the operational control plane.
-
-10. **Auditable security events**  
-    Record security-relevant events such as attestation success/failure, workload version, authorization decisions and inference request identifiers without logging the sensitive payload itself.
-
-#### How TEE fits the SETU architecture
-
-TEE should protect the **confidentiality and integrity of sensitive intelligence processing**; it does not solve every security problem. Authentication, authorization, API security, device security, encrypted communication, secure storage, audit logging and operator access control remain necessary.
-
-The exact TEE technology should be selected according to the deployment hardware. Candidate confidential-computing approaches include CPU-based technologies such as **Intel TDX** or **AMD SEV-SNP**, while deployments requiring confidential GPU inference can use a compatible **GPU confidential-computing architecture**. The deployment layer should remain abstract so SETU's intelligence contract is not tied to one vendor.
-
-The architectural principle is therefore:
-
-**Protect the data → attest the workload → execute sensitive AI → return the minimum necessary result → keep operational authority outside the model.**
+If the operator rejects it, the current operational route remains unchanged.
 
 ---
 
-## 5. End-to-End SETU Workflow
+## 5. The AI / ML Layer
 
-The complete intelligence workflow is:
+SETU's AI layer is intentionally **not an autonomous route controller**.
 
-**1. Detect / receive a disruption**  
-An incident or changing environmental condition enters the operational context.
+It consists of a deterministic intelligence foundation plus a supervised ML disruption-assessment component.
 
-**2. Identify network impact**  
-SETU maps the disruption to potentially affected road segments.
+### Deterministic intelligence is the operational foundation
 
-**3. Assess risk**  
-Incident, weather, accessibility, road and delay factors are evaluated deterministically.
+The deterministic layer provides:
 
-**4. Estimate accessibility and ETA**  
-The system evaluates infrastructure constraints and expected travel-time impact.
+- network impact;
+- risk;
+- accessibility;
+- ETA/delay;
+- route generation;
+- route ranking;
+- explanation; and
+- Digital Twin state/what-if evaluation.
 
-**5. Generate alternatives**  
-Multiple feasible route candidates are generated from the road network.
+These components are explicit, testable and governed by defined contracts.
 
-**6. Rank alternatives**  
-Routes are compared using deterministic multi-factor scoring.
+### ML provides an additional disruption signal
 
-**7. Add ML advisory**  
-The disruption model provides an additional segment/route-level disruption assessment.
+The supervised model provides an additional assessment of disruption conditions for road-segment contexts.
 
-**8. Protect sensitive AI processing**  
-Where confidential-computing infrastructure is available, sensitive feature construction and inference are executed inside the TEE after the workload passes the required authorization/attestation checks.
-
-**9. Explain the recommendation**  
-SETU presents the important factors, evidence and trade-offs in human-readable form.
-
-**10. Request human approval**  
-The recommendation remains pending until an authorized operator reviews it.
-
-**11. Reroute and update state**  
-Only an approved decision changes the operational route/state.
-
-This architecture deliberately separates **prediction, secure computation, recommendation, operational authority, and execution**.
-
----
-
-## 6. System Architecture
-
-```text
-                              SETU PLATFORM
-                                   │
-                  ┌────────────────┴────────────────┐
-                  │                                 │
-           Application Layer                  Intelligence Layer
-                  │                                 │
-             MERN Backend                    Deterministic Engines
-                  │                         ┌────────┼────────┐
-      Shipments / Routes / Users            │        │        │
-      Tracking / APIs / Events            Risk     Impact     ETA
-                  │                         │        │        │
-                  │                  Accessibility Weather Routing
-                  │                         │        │        │
-                  │                         └────────┼────────┘
-                  │                                  │
-                  │                           Digital Twin
-                  │                                  │
-                  │                             ML Advisory
-                  │                                  │
-                  │                         ┌────────▼────────┐
-                  │                         │ Secure AI Layer │
-                  │                         │       TEE       │
-                  │                         │ Attestation     │
-                  │                         │ Protected ML    │
-                  │                         └────────┬────────┘
-                  │                                  │
-                  │                           Explanation
-                  │                                  │
-                  └──────────────────────────► Human Approval
-                                                     │
-                                             Approve / Reject
-                                                     │
-                                                     ▼
-                                             Route Decision
-                                                     │
-                                                     ▼
-                                          Operational State
-```
-
-### Application layer
-
-The MERN application is responsible for operational entities, APIs, authentication/authorization, shipment and route state, operator interaction, tracking, events, and integration with field clients.
-
-### Intelligence layer
-
-The Python intelligence layer contains the deterministic engines and ML advisory responsible for understanding network impact, risk, accessibility, ETA, routes, explanations and disruption signals.
-
-### Secure AI layer
-
-The TEE forms a security boundary around sensitive computation where confidential-computing hardware is available. It should expose only the minimum result required by the application while keeping protected inputs, secrets and model execution inside the attested environment.
-
-### Operational authority
-
-The backend and authorized operator remain outside the ML model's control loop. A model output is never equivalent to a route-change command.
-
-### Offline field client
-
-A future offline mobile application is intended to act as the field-facing client for assigned shipments/routes, GPS updates, incidents, notifications and offline synchronization. The AI intelligence remains server-side; the mobile layer is a field client and synchronization layer.
-
----
-
-## 7. Where AI / ML Fits
-
-SETU is **not** designed as an LLM that independently decides where a truck should travel.
-
-The intelligence stack has two complementary parts.
-
-### Deterministic Intelligence
-
-Provides the authoritative operational calculations:
-
-- Risk
-- Network Impact
-- Accessibility
-- ETA / Delay
-- Route Candidate Generation
-- Route Ranking
-- Explanation
-- Digital Twin state and simulation
-
-### Machine Learning
-
-The current ML model provides an additional **disruption assessment** based on historical environmental, spatial and infrastructure features.
-
-The model does not:
+The model does **not**:
 
 - declare a road closed by itself;
 - replace the Risk Engine;
-- change deterministic route-ranking weights;
+- change route-ranking weights;
 - autonomously reroute a shipment; or
-- bypass operator approval.
+- bypass human approval.
 
-### Secure ML
-
-Where TEE infrastructure is deployed, sensitive ML inference can be isolated from the normal host environment. The TEE protects the computation; the ML model still remains an advisory component and does not receive operational authority.
-
-The intended relationship is:
+The architecture is therefore:
 
 ```text
-Sensitive Operational Data
+Deterministic Intelligence
           │
-          ▼
-   Authenticated Request
-          │
-          ▼
-   Attested TEE Workload
-          │
-          ▼
-   ML / Intelligence
-          │
-          ▼
-Recommendation + Evidence
-          │
-          ▼
-Backend Orchestration
-          │
-          ▼
-PENDING_APPROVAL
-          │
-          ▼
-Operator Review
-       /       \
-   Approve     Reject
-      │           │
-      ▼           ▼
- Operational   Keep Current
-   Action         Route
+          ├───────────────┐
+          │               │
+          ▼               ▼
+   Operational Data     ML Advisory
+          │               │
+          └───────┬───────┘
+                  ▼
+          Recommendation
+                  │
+                  ▼
+             Explanation
+                  │
+                  ▼
+           Human Approval
+                  │
+             Approve/Reject
+                  │
+                  ▼
+          Operational Action
 ```
-
-This keeps AI useful without making the system dependent on an opaque autonomous decision.
 
 ---
 
-## 8. Dataset & Data Foundation
+## 6. Our ML Model
 
-SETU's intelligence layer is built on **road-network, terrain, weather and disruption-context data**.
+### What model did we build?
 
-### Road Network — OpenStreetMap
+SETU evaluates three supervised learning approaches:
 
-- Source: **OpenStreetMap**, acquired through the Overpass API
-- Study area: **Guwahati–Imphal corridor and surrounding network**
-- Core network: **8,007 major-road segments**
-- Main core road classes: motorway, trunk, primary and secondary
+1. Logistic Regression — baseline
+2. Random Forest — nonlinear tree ensemble
+3. HistGradientBoosting — gradient-boosted tree model
 
-OSM attributes are also used for infrastructure accessibility features such as road class, surface and lane information.
+The **Random Forest** is selected as the current champion based on validation PR-AUC.
 
-### Elevation
+### Training data
 
-Road segments are enriched with representative elevation data to capture terrain context and support route intelligence and the ML feature foundation.
+The ML dataset contains **17,551,344 segment-day observations** across:
 
-### Weather — Open-Meteo
+- **8,007 road segments**;
+- **2,192 calendar days**;
+- **2019–2024**; and
+- **40 representative weather points**.
 
-Historical weather data covers:
+Each observation represents the condition/context of one road segment on one calendar day.
 
-- **2019–2024**
-- **40 representative weather points**
-- **2,192 calendar days**
+### Model features
 
-The weather foundation includes precipitation, rainfall duration, temperature, wind, gusts and WMO weather codes. A separate live/cached weather path supports current-condition integration.
+The model uses a fixed **24-feature canonical input vector** containing:
 
-### ML Dataset
-
-The ML dataset contains **17,551,344 segment-day observations** across the six-year 2019–2024 period.
-
-Each observation represents one road segment on one calendar day and combines spatial, road, accessibility and weather context.
-
-The model uses a strict **24-feature canonical input vector**, including:
-
-- temporal encodings;
-- latitude / longitude;
+- cyclical month encoding;
+- cyclical day-of-week encoding;
+- latitude;
+- longitude;
 - elevation;
 - road-type rank;
 - paved-surface indicator;
@@ -498,119 +390,473 @@ The model uses a strict **24-feature canonical input vector**, including:
 - connectivity proxy;
 - accessibility score;
 - weather-point distance;
-- precipitation and rainfall;
+- precipitation;
+- rainfall;
 - precipitation duration;
 - temperature features;
-- wind and gust; and
-- WMO weather severity.
+- wind speed;
+- wind gust;
+- WMO weather code; and
+- daily weather severity.
 
-### Important Dataset Limitation
+The exact feature contract is kept fixed between training and inference to avoid training/inference mismatch.
 
-The ML target, `disruption_proxy`, is a **deterministically engineered prototype label**, derived from environmental/disruption thresholds and infrastructure conditions. It is not observed road-closure ground truth.
+### Target label
 
-Therefore, ML evaluation demonstrates how well the model reproduces the engineered disruption rule. It should **not** be interpreted as proof of real-world road-closure forecasting or real-time physical passability prediction.
+The current target is `disruption_proxy`.
 
-This distinction is an intentional part of SETU's technical methodology.
+It is a **deterministically engineered prototype label** based on environmental/disruption thresholds and infrastructure conditions.
+
+It is **not observed road-closure ground truth**.
+
+This is a deliberate methodological disclosure.
+
+### Why this matters
+
+Because the target is derived from variables that also appear in the feature set, very high ML metrics are expected to demonstrate **rule-replication fidelity**.
+
+They should not be presented as proof that SETU can predict real-world road closures with equivalent accuracy.
+
+A future production-quality predictive model should be trained against observed outcomes such as confirmed closures, passability observations and verified incident consequences.
 
 ---
 
-## 9. ML Training & Inference
+## 7. ML Training Methodology
 
-The supervised ML pipeline evaluates:
+SETU uses a chronological split:
 
-- Logistic Regression baseline
-- Random Forest
-- HistGradientBoosting
-
-The selected model is the **Random Forest** model.
-
-Training follows a chronological split:
-
-| Dataset | Period | Purpose |
+| Dataset | Period | Role |
 |---|---|---|
-| Train | 2019–2022 | Model training |
-| Validation | 2023 | Model/threshold selection |
+| Train | 2019–2022 | Model fitting |
+| Validation | 2023 | Model and threshold selection |
 | Test | 2024 | Final holdout evaluation |
 
-The frozen Random Forest decision threshold is **0.30**.
+This avoids randomly mixing years between training and evaluation.
 
-Inference uses the same canonical 24-feature contract established during training. The Random Forest receives raw, unscaled features; the StandardScaler is reserved for the linear baseline.
+### Model-selection metric
 
-At inference, SETU can produce segment-level disruption probability and route-level aggregation such as mean disruption probability, peak probability and disrupted segment count.
+Because disruption events are relatively rare, **PR-AUC** is used as the primary model-selection metric, supported by:
 
-The ML probability is an **advisory model output**, not a calibrated claim of real-world road-closure probability.
+- precision;
+- recall;
+- F1;
+- ROC-AUC;
+- confusion matrix;
+- Brier score; and
+- log-loss.
 
-Model artifacts remain local/gitignored rather than being committed to the repository.
+### Decision threshold
 
----
+The Random Forest uses a frozen decision threshold of **0.30**.
 
-## 10. Safety, Explainability, Security & Governance
+The threshold is selected using the validation period and then frozen before the final test evaluation.
 
-SETU intentionally avoids turning an uncertain model output into an irreversible operational action.
+### Leakage controls
 
-### 1. Affected does not automatically mean blocked
+Operational outputs and target-derived information are excluded from the ML feature vector, including disruption labels, risk outputs, network-impact outputs, reroute recommendations and delay factors.
 
-Spatial impact analysis identifies potentially affected infrastructure. A segment becomes operationally blocked only through the appropriate explicit operational state.
-
-### 2. AI does not silently override deterministic intelligence
-
-ML is an auxiliary signal. Deterministic route generation, ranking, risk and ETA remain the operational foundation.
-
-### 3. Human approval is mandatory
-
-A reroute recommendation remains `PENDING_APPROVAL` until an authorized operator explicitly approves it.
-
-### 4. Sensitive AI computation should be protected
-
-A TEE provides an additional hardware-backed security boundary for sensitive inference workloads. Attestation and authorization should be required before protected secrets or sensitive inputs are released.
-
-### 5. Security should fail closed
-
-If the protected execution environment cannot be trusted, the system should not release sensitive information merely to obtain an AI result. A secure failure should preserve the existing operational route rather than silently degrade into an untrusted sensitive computation path.
-
-### 6. Explanations remain part of the decision
-
-The operator should be able to understand the important factors behind a recommendation rather than receiving an unexplained model score.
-
-Together these controls provide an auditable path from:
-
-**incident → evidence → risk → alternatives → ML advisory → secure computation → recommendation → human decision → action**
+The linear baseline uses a scaler fitted only on training data; the Random Forest receives raw features.
 
 ---
 
-## 11. Technology Architecture
+## 8. ML Inference & Decision Integration
 
-### Application
+The trained model is exposed through a deterministic Python inference component: `DisruptionInferenceEngine`.
 
-**MERN architecture** with React, Node.js/Express and Socket.IO where applicable.
+The inference contract includes:
 
-### Intelligence
+- the exact 24-feature order;
+- the Random Forest model artifact;
+- the frozen 0.30 threshold;
+- strict feature validation;
+- strict WMO weather-code validation;
+- segment-level disruption output; and
+- route-level aggregation.
 
-**Python 3.10**, scikit-learn, NumPy and SciPy.
+For a route, SETU can derive information such as:
+
+- length-weighted mean disruption score;
+- maximum segment disruption;
+- disrupted-segment count; and
+- segment-level predictions.
+
+The ML advisory does not modify deterministic route generation or route-ranking weights.
+
+If the model artifact is unavailable, the system does not invent a probability. The orchestration path can mark the advisory unavailable while the deterministic pipeline continues.
+
+---
+
+## 9. Secure AI Processing — Trusted Execution Environment
+
+SETU is designed with a **Trusted Execution Environment (TEE)** as a security boundary for sensitive AI processing.
+
+### What is a TEE?
+
+A TEE is a hardware-backed isolated execution environment designed to protect code and data while they are being processed.
+
+In simple terms:
+
+> **The AI gets a protected computing room where sensitive data can be processed with stronger isolation from the normal host environment.**
+
+TEE protection is particularly relevant when SETU is deployed in cloud or shared infrastructure and processes sensitive information such as:
+
+- shipment information;
+- vehicle/location data;
+- incident information;
+- route plans;
+- ETA/operational context;
+- sensitive model inputs; and
+- protected model or key material.
+
+### How it fits SETU
+
+```text
+SETU Backend
+     │
+     │ Authenticated + Authorized Request
+     ▼
+┌──────────────────────────────┐
+│       TEE / CONFIDENTIAL     │
+│          WORKLOAD            │
+│                              │
+│  Protected Inputs             │
+│        ↓                     │
+│  Feature Construction         │
+│        ↓                     │
+│  ML Inference                 │
+│        ↓                     │
+│  Minimum Necessary Result     │
+└──────────────┬───────────────┘
+               │
+         Attested Result
+               ▼
+        Backend / Operator
+               │
+               ▼
+        Human Approval
+```
+
+### What we should implement
+
+The production TEE design should include:
+
+1. **Hardware-backed isolation** — run sensitive inference inside a supported confidential-computing environment.
+2. **Remote attestation** — verify that the expected workload is running before releasing protected secrets or sensitive resources.
+3. **Encrypted communication** — TLS remains required; TEE does not replace encryption in transit.
+4. **Encrypted storage** — sensitive data remains protected at rest.
+5. **Minimal plaintext exposure** — only the computation that requires plaintext should receive it.
+6. **Protected model and inputs** — protect sensitive inference inputs and model material where supported.
+7. **Attested secret release** — keys/secrets are released only after authorization and successful attestation.
+8. **Measured workload identity** — approved workload versions should have a verifiable identity.
+9. **Fail-closed behavior** — failed attestation or unexpected workload identity must not receive protected secrets.
+10. **Security auditing** — record attestation and authorization events without logging sensitive payloads.
+
+### TEE does not replace the security system
+
+TEE is one security layer. SETU still requires:
+
+- authentication;
+- authorization;
+- secure APIs;
+- TLS;
+- encrypted storage;
+- secure device/mobile communication;
+- access control;
+- input validation; and
+- audit logging.
+
+Candidate confidential-computing technologies depend on deployment hardware and can include CPU technologies such as **Intel TDX** or **AMD SEV-SNP**, with compatible confidential-GPU technology considered only if future workloads require it.
+
+The key security principle is:
+
+> **Protect the data → attest the workload → execute sensitive AI → return the minimum necessary result → keep operational authority outside the model.**
+
+---
+
+## 10. End-to-End Operational Scenario
+
+Consider a shipment travelling through a disruption-prone corridor.
+
+### Step 1 — A disruption occurs
+
+A field report, incident or changing environmental condition enters SETU.
+
+### Step 2 — SETU identifies network impact
+
+The incident is mapped to nearby road segments and potentially affected infrastructure is identified.
+
+### Step 3 — SETU assesses risk
+
+Incident severity, weather, accessibility, road condition, network criticality and current delay are evaluated.
+
+### Step 4 — ETA impact is calculated
+
+SETU estimates baseline and disruption-aware travel time for the shipment's vehicle profile.
+
+### Step 5 — Alternatives are generated
+
+The routing engine generates multiple feasible alternatives while respecting explicitly blocked segments.
+
+### Step 6 — Alternatives are ranked
+
+Routes are compared using ETA, risk, accessibility, distance and vehicle compatibility.
+
+### Step 7 — ML adds disruption evidence
+
+The ML model provides an additional disruption assessment for the relevant segments/route.
+
+### Step 8 — Explanation is produced
+
+SETU explains the important trade-offs instead of returning only a score.
+
+### Step 9 — Operator reviews
+
+The recommendation enters `PENDING_APPROVAL`.
+
+### Step 10 — Operator decides
+
+- **Approve:** route changes and operational state is updated.
+- **Reject:** current route remains active.
+
+This creates a complete chain:
+
+**Incident → Evidence → Recommendation → Explanation → Human Decision → Operational Action**
+
+---
+
+## 11. GIS, GPS, Alerts & Field Operations
+
+The product architecture is designed to connect intelligence with the operational capabilities expected by SIH26002.
+
+### GIS
+
+The road network and incidents are spatially represented so that route impact and accessibility can be evaluated geographically.
+
+### GPS tracking
+
+The broader SETU application is designed to consume vehicle location updates and associate them with shipment and route context.
+
+### Alerts
+
+The application can use intelligence outputs to surface high-risk corridors, disruption conditions, delay changes and rerouting recommendations to operators.
+
+### Field reporting
+
+A field client is intended to support geo-tagged incident information and operational updates from remote locations.
+
+### Offline support
+
+A future offline mobile application is intended for assigned shipments/routes, GPS updates, incidents, notifications and offline synchronization in low-connectivity areas.
+
+The mobile layer is a **field client and synchronization layer**. AI intelligence remains server-side.
+
+### Multilingual support
+
+Multilingual notifications are part of the broader product direction so that field and operational users can receive actionable information in appropriate languages.
+
+---
+
+## 12. System Architecture
+
+```text
+                              SETU
+                               │
+          ┌────────────────────┴────────────────────┐
+          │                                         │
+   APPLICATION LAYER                         INTELLIGENCE LAYER
+          │                                         │
+   MERN Backend                              Python Intelligence
+          │                                         │
+   ┌──────┼─────────┐                    ┌──────────┼───────────┐
+   │      │         │                    │          │           │
+Shipments Tracking Users              Impact      Risk        ETA
+   │      │         │                    │          │           │
+Routes   Events     APIs           Accessibility Weather     Routing
+   │      │         │                    └──────────┼───────────┘
+   │      │         │                               │
+   └──────┴─────────┘                         Digital Twin
+          │                                         │
+          │                                    ML Advisory
+          │                                         │
+          │                                ┌────────▼────────┐
+          │                                │   SECURE AI     │
+          │                                │      TEE        │
+          │                                │   Attestation   │
+          │                                │ Protected ML    │
+          │                                └────────┬────────┘
+          │                                         │
+          └─────────────────────────────────────────┤
+                                                    ▼
+                                              Explanation
+                                                    │
+                                                    ▼
+                                             Human Approval
+                                                /       \
+                                           Approve       Reject
+                                              │             │
+                                              ▼             ▼
+                                           Reroute      Keep Route
+                                              │
+                                              ▼
+                                       Operational State
+```
+
+### Application layer
+
+The MERN application manages operational entities, users, authentication/authorization, shipment and route state, tracking, APIs, events and operator workflows.
+
+### Intelligence layer
+
+The Python layer performs deterministic network, risk, accessibility, ETA, routing and explanation calculations plus ML disruption assessment.
+
+### Secure AI layer
+
+The TEE provides a confidential-computing boundary for sensitive AI workloads where appropriate deployment hardware is available.
+
+### Control layer
+
+The backend and authorized operator retain operational authority. The model never becomes a route-change command by itself.
+
+---
+
+## 13. Data Foundation
 
 ### Road data
 
-**OpenStreetMap / Overpass**.
+**Source:** OpenStreetMap / Overpass  
+**Study area:** Guwahati–Imphal corridor and surrounding network  
+**Core network:** 8,007 major-road segments
+
+### Elevation
+
+Representative spatial elevation enrichment provides terrain context for route intelligence and ML features.
 
 ### Weather
 
-**Open-Meteo** historical and live/cached weather paths.
+Historical weather foundation:
 
-### Machine Learning
+- 2019–2024;
+- 40 representative weather points;
+- 2,192 calendar days.
 
-Logistic Regression, Random Forest and HistGradientBoosting, with the Random Forest used for the disruption advisory.
+### ML dataset
 
-### Security
+17,551,344 segment-day observations combining spatial, road, accessibility and weather context.
 
-TLS, authenticated/authorized application access, encrypted storage, audit controls and a **TEE/confidential-computing boundary for sensitive AI processing** where supported by the deployment hardware.
+### Data provenance principle
 
-The architecture deliberately avoids unnecessary infrastructure such as Kafka, Redis, or a separate ML microservice unless a later deployment requirement justifies it.
-
-The Python ML inference contract is intentionally kept independent from the final confidential-computing platform so that SETU can be deployed on compatible CPU or GPU confidential-computing infrastructure without redesigning the decision layer.
+SETU does not fabricate disaster observations when a real local event source is unavailable. Prototype labels and proxy measurements are explicitly disclosed as such.
 
 ---
 
-## 12. Project Structure
+## 14. Safety, Explainability & Governance
+
+SETU is intentionally designed so that uncertainty does not automatically become an irreversible operational action.
+
+### Rule 1 — Affected does not mean blocked
+
+Spatial proximity identifies potentially affected infrastructure. Confirmed blockage is a separate operational state.
+
+### Rule 2 — ML does not override deterministic intelligence
+
+ML is an advisory signal. Deterministic route generation, ranking and operational rules remain authoritative.
+
+### Rule 3 — Human approval is mandatory
+
+A recommendation remains `PENDING_APPROVAL` until an authorized operator explicitly approves it.
+
+### Rule 4 — Invalid information is not silently fabricated
+
+Missing models, invalid weather codes and invalid feature inputs should result in explicit validation/error states rather than invented values.
+
+### Rule 5 — Security does not imply autonomy
+
+Even protected inference inside a TEE has no authority to silently reroute a shipment.
+
+---
+
+## 15. Technology Stack
+
+**Application:** MERN, React, Node.js/Express, Socket.IO where applicable  
+**Intelligence:** Python 3.10, scikit-learn, NumPy, SciPy  
+**Road data:** OpenStreetMap / Overpass  
+**Weather:** Open-Meteo  
+**ML:** Logistic Regression, Random Forest, HistGradientBoosting  
+**Security architecture:** TLS + secure storage + TEE/confidential computing where deployed  
+**Operational model:** deterministic intelligence + ML advisory + human approval
+
+The architecture deliberately avoids adding Kafka, Redis or unnecessary ML microservices before there is a demonstrated operational need.
+
+---
+
+## 16. What Makes SETU Different
+
+SETU's value is not one isolated algorithm. It is the **integration of intelligence into an operationally governed decision loop**.
+
+| Conventional approach | SETU approach |
+|---|---|
+| Shortest route | Multi-factor operational route decision |
+| Static map | Disruption-aware network context |
+| Incident shown separately | Incident projected onto road network |
+| Risk as an opaque score | Deterministic risk with contributing factors |
+| Accessibility assumed | Explicit infrastructure accessibility proxy |
+| One route | Multiple alternatives |
+| Black-box recommendation | Explainable recommendation |
+| ML makes decision | ML provides advisory evidence |
+| Automatic reroute | Human-approved reroute |
+| Data protected mainly at rest/in transit | Data-in-use can also be protected with TEE |
+| Online-only field assumption | Future offline field synchronization |
+
+---
+
+## 17. Important Technical Limitations
+
+SETU deliberately documents its current boundaries rather than hiding them.
+
+### ML label limitation
+
+The current disruption target is engineered from deterministic rules, not observed road-closure ground truth.
+
+### ML metric limitation
+
+Very high metrics therefore indicate rule-replication fidelity and should not be presented as real-world closure-prediction accuracy.
+
+### Spatial generalization limitation
+
+The current test period is an unseen year over the same underlying road network. It does not prove generalization to unseen roads or unseen regions.
+
+### Accessibility limitation
+
+The accessibility score is an OSM-derived infrastructure proxy, not a real-time passability guarantee.
+
+### TEE deployment limitation
+
+TEE protection depends on deployment hardware, cloud/platform support, attestation infrastructure and correct key-management integration. It is an architectural security layer, not a claim that every development machine automatically provides confidential computing.
+
+These limitations define the next scientific and engineering improvements rather than weakening the core architecture.
+
+---
+
+## 18. Future Evolution
+
+The platform can evolve toward:
+
+- observed road-closure and passability datasets;
+- verified incident and disaster feeds;
+- stronger real-time prediction;
+- broader NER road coverage;
+- production GPS/vehicle integration;
+- offline-first mobile synchronization;
+- multilingual field workflows;
+- production-grade confidential computing and attestation;
+- model monitoring and drift detection; and
+- integration with government transport and monitoring systems.
+
+The most important ML improvement is to move from **engineered disruption labels** toward **verified real-world outcomes**.
+
+---
+
+## 19. Project Structure
 
 ```text
 SETU_AI/
@@ -620,84 +866,29 @@ SETU_AI/
 │   ├── impact/         # Network impact analysis
 │   ├── accessibility/  # Infrastructure accessibility
 │   ├── eta/            # ETA and delay calculation
-│   ├── digital_twin/   # State, events and simulation
-│   ├── routing/        # Candidate generation and ranking
+│   ├── digital_twin/   # State, events and what-if simulation
+│   ├── routing/        # Route generation and ranking
 │   ├── explanation/    # Explainable recommendations
 │   ├── reroute/        # Incident-to-reroute orchestration
 │   └── ml/             # ML training and inference
-├── datasets/           # Specifications, samples and local data
-├── models/             # Local, gitignored model artifacts
+├── datasets/           # Dataset specifications and local data
+├── models/             # Local/gitignored model artifacts
 ├── tests/              # Regression and component tests
-├── README.md           # Product, problem and architecture overview
-├── HOW-TO-BUILD.md     # Engineering build and validation guide
-└── TASK_TRACKER.md     # Checkpoint development history
+├── README.md
+├── HOW-TO-BUILD.md
+└── TASK_TRACKER.md
 ```
 
-The repository documentation is intentionally separated by purpose:
-
-- **README.md** explains the problem, proposed solution, architecture, AI/ML role, security model and overall product so a new reader can understand SETU without reading the implementation history first.
-- **HOW-TO-BUILD.md** contains the detailed engineering methodology, validation rules, invariants, build process and rollback discipline.
-- **TASK_TRACKER.md** contains checkpoint-by-checkpoint engineering history and development decisions.
-
 ---
 
-## 13. Why This Approach Fits the Problem
+## 20. The SETU Vision
 
-SETU is designed around the reality that logistics disruption management is not a single prediction problem.
+SETU aims to become a practical bridge between **logistics operations, intelligent infrastructure analysis and secure AI decision support** for difficult and disruption-prone corridors.
 
-A useful system must combine several kinds of reasoning:
+The long-term vision is not simply to build another route planner.
 
-**Where is the disruption?**  
-Network Impact answers this spatially.
+It is to build a system that can:
 
-**How dangerous or operationally important is it?**  
-Risk and weather intelligence provide deterministic assessment.
+**Understand the network → understand the disruption → estimate the consequence → generate alternatives → explain the trade-offs → protect sensitive intelligence → let a human make the decision → execute and track the approved action.**
 
-**Can the road infrastructure reasonably support the movement?**  
-Accessibility provides an infrastructure-based proxy.
-
-**How much time could the disruption add?**  
-ETA and delay estimation quantify the operational consequence.
-
-**What else can the vehicle do?**  
-Route generation creates alternatives.
-
-**Which alternative is the best trade-off?**  
-Deterministic route ranking compares ETA, risk, accessibility, distance and vehicle compatibility.
-
-**What does the ML model think?**  
-The disruption model adds an independent advisory signal.
-
-**Why is this route recommended?**  
-The explanation layer exposes the important evidence and trade-offs.
-
-**Can sensitive information be protected while AI is running?**  
-The TEE architecture provides a hardware-backed confidential-computing boundary for sensitive inference where supported.
-
-**Who makes the final operational decision?**  
-The authorized operator does.
-
-This produces a complete decision-support loop rather than an isolated route predictor.
-
----
-
-## 14. Vision
-
-SETU aims to become a practical bridge between **logistics operations and intelligent infrastructure decision-making** for difficult and disruption-prone corridors.
-
-The long-term goal is not simply to build another route planner. It is to build a system that can:
-
-- understand the road network;
-- understand changing environmental and incident conditions;
-- estimate operational consequences;
-- generate and compare alternatives;
-- use ML without surrendering operational control;
-- protect sensitive logistics and AI workloads;
-- explain its recommendations; and
-- keep a human decision-maker in control of consequential actions.
-
-The vision can be summarized as:
-
-> **A secure, explainable and disruption-aware logistics intelligence system that helps operators make better route decisions when the real world does not behave like a static map.**
-
-SETU is therefore not just a shortest-path engine and not an autonomous AI dispatcher. It is a **secure human-in-the-loop decision-support platform for disruption-aware logistics**.
+That is the role of SETU.
