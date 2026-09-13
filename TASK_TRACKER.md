@@ -136,11 +136,12 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Item | Status | Checkpoint | Notes |
 |---|---|---:|---|
 | ML Dataset Construction | ✅ COMPLETE | 18 | Pure standard-library ML dataset builder implemented; test-first; 16 Checkpoint 18 tests passing; 333 total repository tests passing; 8,007 road segments; 40 weather stations resolved; 2019-01-01 through 2024-12-31; exact 17,551,344 segment-day rows generated; six annual CSV partitions generated; dataset_metadata.json generated; exact canonical 30-column schema validated; zero duplicate (segment_id, date) combinations; deterministic row ordering validated; leakage audit passed; derived disruption_proxy provenance contract preserved; disaster condition (a) inactive because local disaster directory is empty (no fabricated events); compileall passed; git diff --check passed; zero new external dependencies; no external API calls; no ML training performed; no ML inference implemented; deviation audit PASS |
-| Logistic Regression baseline | ⏳ LATER | 19 | First ML baseline in Checkpoint 19 |
-| Random Forest comparison | ⏳ LATER | 19 | Compare against baseline in Checkpoint 19 |
-| XGBoost tabular benchmark | ⏳ LATER | 19 | Structured tabular benchmark in Checkpoint 19 |
-| Temporal CV split | ⏳ LATER | 19 | Chronological split: Train 2019–2022, Val 2023, Test 2024 |
-| Spatial-holdout evaluation | ⏳ LATER | 19 | Evaluate on unseen roads/coordinates |
+| ML Training + Evaluation Pipeline | 🚧 IMPLEMENTATION COMPLETE | 19 | Commit 36b15e0; 16/16 CP19 tests passing; 333 CP1–18 tests passing; compileall clean; real CP18 schema ingestion verified; source audit passed; 24-feature vector; WMO encoding; train-only scaler; RF positive-preserving 500k sampler; HGB sample weights; LR-to-SGD fallback; 99-threshold sweep (precision >= 0.20); validation champion selection; temporal test evaluation contract; full-scale training NOT yet executed; final model artifacts NOT yet generated; training/evaluation run pending |
+| Logistic Regression baseline | ⏳ READY TO TRAIN | 19 | Linear baseline implementation ready with SGD fallback; training pending |
+| Random Forest comparison | ⏳ READY TO TRAIN | 19 | Bagged ensemble implementation ready; 500k sampling contract ready; training pending |
+| HistGradientBoosting benchmark | ⏳ READY TO TRAIN | 19 | Binned gradient boosting benchmark implementation ready; training pending |
+| Temporal validation & test | ⏳ READY TO TRAIN | 19 | Chronological split (Train 2019–2022, Val 2023, Test 2024); frozen threshold evaluation ready |
+| Spatial-holdout evaluation | ⏳ LATER | — | Deferred to later evaluation milestone on unseen roads/coordinates |
 | Decision-layer integration | ⏳ LATER | 20 | Connect model outputs back to operational decisions |
 
 ### INTEGRATION / PRODUCT LOOP
@@ -158,7 +159,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 18 — ML Dataset Construction complete**
+**Checkpoint 19 — ML Training + Evaluation Pipeline Implementation (Ready for Training-Evaluation)**
 
 Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
@@ -314,16 +315,41 @@ Completed (Checkpoint 18 — ML Dataset Construction):
 - Zero new external dependencies introduced; zero external API calls during generation
 - No ML model training performed; no ML inference implemented
 
+Completed (Checkpoint 19 — ML Training + Evaluation Pipeline Implementation):
+- ML training and evaluation module implemented (`src/ml/train_models.py`, `src/ml/__init__.py`) at commit `36b15e0`
+- Canonical 24-feature schema strictly enforced in deterministic order
+- Dynamic cyclical temporal feature derivation (`month_sin`, `month_cos`, `dow_sin`, `dow_cos`) from real CP18 CSV columns (`month`, `day_of_week`) verified on synthetic real-schema records
+- Precomputed temporal features from test fixtures seamlessly supported for full backward test compatibility
+- Canonical weather code hazard mapping strictly using `src.data.weather.weather_severity.WMO_CODE_SEVERITY` into [0.0, 1.0]; zero duplicate WMO dictionaries
+- Leakage isolation strictly verified: 14 forbidden columns (`segment_id`, `date`, `year`, `disruption_score_continuous`, `disruption_proxy`, `risk_score`, `risk_band`, etc.) completely isolated from features
+- Strict chronological split boundaries: Train 2019–2022, Val 2023, Test 2024; zero cross-year leakage
+- Train-only standardization: `StandardScaler` fit strictly on 2019–2022 training rows; tree models receive raw unscaled features
+- Linear baseline with explicit fallback contract: `LogisticRegression(solver='lbfgs', class_weight='balanced')` with deterministic fallback to `SGDClassifier(loss='log_loss', class_weight='balanced')` on resource/timeout/runtime errors, recording execution metadata
+- Random Forest positive-preserving sampler retaining 100% of positive training records and sampling negatives to reach exactly 500,000 rows with fixed seed 42 and complete audit metadata
+- HistGradientBoosting binned tabular benchmark with deterministic balanced sample weighting via `compute_sample_weight('balanced', y=y_train)`
+- Validation threshold optimization on 2023: exactly 99 candidate thresholds (0.01 to 0.99 in 0.01 steps), precision floor >= 0.20, F1 maximization, and deterministic tie-breaking
+- Temporal held-out evaluation contract: 2024 test partition evaluated strictly once at the frozen validation threshold without re-tuning
+- Champion model selection protocol: strictly by validation PR-AUC, then validation F1, then lexicographical model name tie-break (test set never consulted)
+- Complete metrics suite: PR-AUC, ROC-AUC, Brier score, Log-Loss from probabilities; Precision, Recall, F1, Confusion Matrix from thresholded predictions
+- Memory-safe partition streaming in 250,000-row chunks; zero training or data loading on module import
+- Approved artifact paths declared in `ARTIFACT_PATHS` without auto-generating directories or files on disk
+- 16/16 Checkpoint 19 unit tests passing (`tests/test_ml_training.py`)
+- 333 full repository regression tests passing across Checkpoints 1–18
+- compileall clean; git diff --check clean
+- Full-scale model training NOT yet executed
+- Final model artifacts NOT yet generated
+- Training and evaluation execution phase remains pending operator authorization
+
 ML Training Guardrail:
-- Checkpoint 18 is strictly dataset construction; no training or inference has been performed.
-- Checkpoint 19 (ML Training + Evaluation) is now the next approved task.
+- Checkpoint 19 implementation pipeline is complete and verified; full-scale model training and evaluation execution has NOT yet been performed.
 - All subsequent experiments in Checkpoint 19 must evaluate models as proof-of-pipeline threshold classifiers on same-day historical data, without claiming real-world physical road-closure forecasting accuracy.
+- True spatial holdout on unseen roads/coordinates is explicitly deferred to a later evaluation milestone.
 
 Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 19 — ML Training + Evaluation
+Checkpoint 19 — Model Training & Evaluation Execution (Training Run)
 
 ---
 
