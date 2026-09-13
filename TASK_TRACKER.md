@@ -136,7 +136,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 | Item | Status | Checkpoint | Notes |
 |---|---|---:|---|
 | ML Dataset Construction | ✅ COMPLETE | 18 | Pure standard-library ML dataset builder implemented; test-first; 16 Checkpoint 18 tests passing; 333 total repository tests passing; 8,007 road segments; 40 weather stations resolved; 2019-01-01 through 2024-12-31; exact 17,551,344 segment-day rows generated; six annual CSV partitions generated; dataset_metadata.json generated; exact canonical 30-column schema validated; zero duplicate (segment_id, date) combinations; deterministic row ordering validated; leakage audit passed; derived disruption_proxy provenance contract preserved; disaster condition (a) inactive because local disaster directory is empty (no fabricated events); compileall passed; git diff --check passed; zero new external dependencies; no external API calls; no ML training performed; no ML inference implemented; deviation audit PASS |
-| ML Training + Evaluation Pipeline | 🚧 IMPLEMENTATION COMPLETE | 19 | Commit 36b15e0; 16/16 CP19 tests passing; 333 CP1–18 tests passing; compileall clean; real CP18 schema ingestion verified; source audit passed; 24-feature vector; WMO encoding; train-only scaler; RF positive-preserving 500k sampler; HGB sample weights; LR-to-SGD fallback; 99-threshold sweep (precision >= 0.20); validation champion selection; temporal test evaluation contract; full-scale training NOT yet executed; final model artifacts NOT yet generated; training/evaluation run pending |
+| ML Training + Evaluation Pipeline | ⏳ READY FOR TRAINING-EVALUATION EXECUTION | 19 | Implementation at 36b15e0, orchestration at b98ad7a; 16/16 CP19 tests passing; 10/10 orchestration tests passing; 333 CP1–18 regression tests passing; compileall clean; Python 3.10.9 / scikit-learn 1.6.1; dataset independently reconciled (Train 2019–2022: 11,698,227, Val 2023: 2,922,555, Test 2024: 2,930,562, Total: 17,551,344 rows across 6 CSV partitions); full-scale model training NOT yet executed; final model artifacts NOT yet generated; ready for execution |
 | Logistic Regression baseline | ⏳ READY TO TRAIN | 19 | Linear baseline implementation ready with SGD fallback; training pending |
 | Random Forest comparison | ⏳ READY TO TRAIN | 19 | Bagged ensemble implementation ready; 500k sampling contract ready; training pending |
 | HistGradientBoosting benchmark | ⏳ READY TO TRAIN | 19 | Binned gradient boosting benchmark implementation ready; training pending |
@@ -159,7 +159,7 @@ Generated raw/processed datasets remain local unless the blueprint explicitly re
 
 ## 5. Current Checkpoint
 
-**Checkpoint 19 — ML Training + Evaluation Pipeline Implementation (Ready for Training-Evaluation)**
+**Checkpoint 19 — ML Training + Evaluation Pipeline (Ready for Training-Evaluation Execution)**
 
 Completed (Checkpoint 12 — Thin Digital Twin Foundation):
 - Thin in-memory DigitalTwinState implemented for network, vehicles, shipments, and incidents
@@ -315,8 +315,9 @@ Completed (Checkpoint 18 — ML Dataset Construction):
 - Zero new external dependencies introduced; zero external API calls during generation
 - No ML model training performed; no ML inference implemented
 
-Completed (Checkpoint 19 — ML Training + Evaluation Pipeline Implementation):
-- ML training and evaluation module implemented (`src/ml/train_models.py`, `src/ml/__init__.py`) at commit `36b15e0`
+Completed (Checkpoint 19 — ML Training + Evaluation Pipeline):
+- ML training and evaluation core module implemented (`src/ml/train_models.py`, `src/ml/__init__.py`) at commit `36b15e0`
+- Training orchestration and execution layer implemented at commit `b98ad7a`
 - Canonical 24-feature schema strictly enforced in deterministic order
 - Dynamic cyclical temporal feature derivation (`month_sin`, `month_cos`, `dow_sin`, `dow_cos`) from real CP18 CSV columns (`month`, `day_of_week`) verified on synthetic real-schema records
 - Precomputed temporal features from test fixtures seamlessly supported for full backward test compatibility
@@ -331,17 +332,24 @@ Completed (Checkpoint 19 — ML Training + Evaluation Pipeline Implementation):
 - Temporal held-out evaluation contract: 2024 test partition evaluated strictly once at the frozen validation threshold without re-tuning
 - Champion model selection protocol: strictly by validation PR-AUC, then validation F1, then lexicographical model name tie-break (test set never consulted)
 - Complete metrics suite: PR-AUC, ROC-AUC, Brier score, Log-Loss from probabilities; Precision, Recall, F1, Confusion Matrix from thresholded predictions
-- Memory-safe partition streaming in 250,000-row chunks; zero training or data loading on module import
-- Approved artifact paths declared in `ARTIFACT_PATHS` without auto-generating directories or files on disk
-- 16/16 Checkpoint 19 unit tests passing (`tests/test_ml_training.py`)
-- 333 full repository regression tests passing across Checkpoints 1–18
+- Memory-safe dataset loader (`load_split_matrix`) with fast binary line counting (`count_partition_rows`), bounded chunk streaming (250,000 rows), and float32/int8 preallocation
+- Strict memory lifetime isolation: zero simultaneous coexisting train, validation, or test matrices
+- End-to-end pipeline orchestrator (`run_training_pipeline`) sequencing Steps 1–15 with frozen threshold evaluation
+- Approved artifact serialization helper (`save_pipeline_artifacts`) writing all 7 approved files (`scaler.joblib`, `scaler_metadata.json`, `linear_baseline.joblib`, `random_forest.joblib`, `hist_gradient_boosting.joblib`, `evaluation_summary.json`, `model_comparison_report.md`) gated strictly by `save_artifacts=True`
+- Module imports remain 100% side-effect free; `models/` directory does not exist on disk
+- Observational resource diagnostics (`check_pipeline_resource_diagnostics`) distinguishing memory tiers without modifying configurations
+- Mandatory methodology disclosure strictly preserved: "SAME-DAY HISTORICAL CLASSIFICATION / ENGINEERED-LABEL RULE-REPLICATION"
+- Dataset row-count reconciliation completed independently via `csv.reader` across all 6 partitions (Train 2019–2022: 11,698,227; Val 2023: 2,922,555; Test 2024: 2,930,562; Total: 17,551,344 rows)
+- 16/16 Checkpoint 19 contract tests passing (`tests/test_ml_training.py`)
+- 10/10 Checkpoint 19 orchestration tests passing (`tests/test_ml_training_orchestration.py`)
+- 333 full repository regression tests passing across Checkpoints 1–18 in active `.venv` (Python 3.10.9, scikit-learn 1.6.1, numpy 2.2.6, scipy 1.15.3)
 - compileall clean; git diff --check clean
 - Full-scale model training NOT yet executed
 - Final model artifacts NOT yet generated
 - Training and evaluation execution phase remains pending operator authorization
 
 ML Training Guardrail:
-- Checkpoint 19 implementation pipeline is complete and verified; full-scale model training and evaluation execution has NOT yet been performed.
+- Checkpoint 19 implementation pipeline and orchestration are complete and verified; full-scale model training and evaluation execution has NOT yet been performed.
 - All subsequent experiments in Checkpoint 19 must evaluate models as proof-of-pipeline threshold classifiers on same-day historical data, without claiming real-world physical road-closure forecasting accuracy.
 - True spatial holdout on unseen roads/coordinates is explicitly deferred to a later evaluation milestone.
 
@@ -349,7 +357,7 @@ Deviation audit:
 PASS
 
 Next approved task:
-Checkpoint 19 — Model Training & Evaluation Execution (Training Run)
+Checkpoint 19 — Execute Training + Validation + Frozen 2024 Test Evaluation
 
 ---
 
