@@ -138,7 +138,9 @@ class TestMLTrainingContracts(unittest.TestCase):
         )
 
     def test_02_feature_extraction_from_record(self):
-        """Verify that extract_features extracts exactly the 24 values in canonical order."""
+        """Verify that extract_features extracts exactly the 24 values in canonical order,
+        transforming weather_code via canonical WMO_CODE_SEVERITY (65.0 -> 0.80).
+        """
         mod = self._require_tm()
         record = {
             "segment_id": "SEG-001",
@@ -176,11 +178,17 @@ class TestMLTrainingContracts(unittest.TestCase):
         self.assertEqual(len(vec), 24)
         self.assertIsInstance(vec, (list, tuple))
         for i, col in enumerate(CANONICAL_24_FEATURES):
-            expected_val = float(record[col])
+            if col == "weather_code":
+                expected_val = WMO_CODE_SEVERITY.get(int(record[col]), 0.0)
+            else:
+                expected_val = float(record[col])
             self.assertTrue(
                 math.isclose(float(vec[i]), expected_val, rel_tol=1e-5),
                 f"Feature {col} at index {i} mismatch: got {vec[i]}, expected {expected_val}",
             )
+        # Explicitly verify weather_code index is 0.80, not raw 65.0
+        wc_idx = CANONICAL_24_FEATURES.index("weather_code")
+        self.assertEqual(float(vec[wc_idx]), 0.80)
 
     # --------------------------------------------------------------------------
     # 2. Canonical WMO Encoding
@@ -382,7 +390,9 @@ class TestMLTrainingContracts(unittest.TestCase):
     # --------------------------------------------------------------------------
 
     def test_12_threshold_tuning_logic_and_precision_floor(self):
-        """Verify threshold sweep respects precision floor >= 0.20 and selects optimal F1."""
+        """Verify threshold sweep across 99 candidate thresholds (0.01 to 0.99 inclusive in 0.01 increments)
+        respects precision floor >= 0.20 and selects optimal F1.
+        """
         mod = self._require_tm()
         import numpy as np
 
@@ -395,7 +405,7 @@ class TestMLTrainingContracts(unittest.TestCase):
         y_proba[50:] = rng.uniform(0.01, 0.45, size=450)
 
         best_thresh, table = mod.tune_validation_threshold(
-            y_true, y_proba, precision_floor=0.20, num_thresholds=100
+            y_true, y_proba, precision_floor=0.20, num_thresholds=99
         )
 
         self.assertTrue(0.01 <= best_thresh <= 0.99)
