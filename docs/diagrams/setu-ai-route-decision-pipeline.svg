@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820">
+  <rect width="1500" height="820" fill="#fbfaf7"/>
+  <g font-family="Comic Sans MS, Segoe Print, cursive" fill="#20252b" stroke="#20252b" stroke-width="3">
+    <text x="750" y="62" text-anchor="middle" font-size="38" font-weight="700" stroke="none">SETU AI — ROUTE DECISION PIPELINE</text>
+    <path d="M300 78 Q750 92 1200 78" fill="none" stroke="#9aa7b3" stroke-width="3"/>
+
+    <g stroke-width="3">
+      <rect x="40" y="135" width="260" height="235" rx="28" fill="#f7e7df"/>
+      <rect x="330" y="135" width="260" height="235" rx="28" fill="#f4eedb"/>
+      <rect x="620" y="135" width="260" height="235" rx="28" fill="#e8f0e4"/>
+      <rect x="910" y="135" width="260" height="235" rx="28" fill="#e7eef3"/>
+      <rect x="1200" y="135" width="260" height="235" rx="28" fill="#eee5f3"/>
+    </g>
+
+    <g stroke="none" font-size="23">
+      <text x="170" y="178" text-anchor="middle" font-size="30" font-weight="700">1. SENSE</text>
+      <text x="170" y="220">• Incident</text><text x="170" y="254">• Weather</text><text x="170" y="288">• Road</text><text x="170" y="322">• Delay</text>
+      <text x="460" y="178" text-anchor="middle" font-size="30" font-weight="700">2. ASSESS</text>
+      <text x="460" y="220">• Risk</text><text x="460" y="254">• Accessibility</text><text x="460" y="288">• Network impact</text>
+      <text x="750" y="178" text-anchor="middle" font-size="30" font-weight="700">3. GENERATE</text>
+      <text x="750" y="220">• Feasible alternatives</text><text x="750" y="254">• ETA / delay</text>
+      <text x="1040" y="178" text-anchor="middle" font-size="30" font-weight="700">4. SCORE &amp; RANK</text>
+      <text x="1040" y="220">• ETA • Risk • Access</text><text x="1040" y="254">• Distance • Vehicle fit</text><text x="1040" y="306" font-size="24">Normalize → Score → Rank</text>
+      <text x="1330" y="178" text-anchor="middle" font-size="30" font-weight="700">5. ADVISE</text>
+      <text x="1330" y="220">• ML disruption</text><text x="1330" y="254">  advisory</text><text x="1330" y="288">• Trade-offs</text>
+    </g>
+
+    <g fill="none" stroke="#334155" stroke-width="7" stroke-linecap="round">
+      <path d="M300 250 H322"/><path d="M590 250 H612"/><path d="M880 250 H902"/><path d="M1170 250 H1192"/>
+    </g>
+    <g fill="#334155" stroke="none">
+      <path d="M322 250 l-18 -12 v24 z"/><path d="M612 250 l-18 -12 v24 z"/><path d="M902 250 l-18 -12 v24 z"/><path d="M1192 250 l-18 -12 v24 z"/>
+    </g>
+
+    <rect x="500" y="435" width="500" height="105" rx="24" fill="#f6e8dc"/>
+    <text x="750" y="480" text-anchor="middle" font-size="30" font-weight="700" stroke="none">ADMIN / OPERATOR REVIEW</text>
+    <text x="750" y="515" text-anchor="middle" font-size="22" stroke="none">Inspect route • risk • ETA • explanation • ML advisory</text>
+
+    <path d="M1330 370 C1330 405 1110 420 1000 463" fill="none" stroke="#4b5563" stroke-width="5"/>
+    <path d="M1000 463 l18 -12 v24 z" fill="#4b5563" stroke="none"/>
+
+    <rect x="440" y="600" width="230" height="92" rx="24" fill="#e7f1df"/>
+    <rect x="830" y="600" width="230" height="92" rx="24" fill="#f3dedc"/>
+    <text x="555" y="657" text-anchor="middle" font-size="30" font-weight="700" stroke="none">✓ APPROVE</text>
+    <text x="945" y="657" text-anchor="middle" font-size="30" font-weight="700" stroke="none">✕ REJECT</text>
+
+    <rect x="350" y="720" width="360" height="60" rx="20" fill="#e7f1df"/>
+    <rect x="790" y="720" width="360" height="60" rx="20" fill="#f3dedc"/>
+    <text x="530" y="758" text-anchor="middle" font-size="23" stroke="none">Apply route change</text>
+    <text x="970" y="758" text-anchor="middle" font-size="23" stroke="none">Keep current route</text>
+    <path d="M555 692 V716" fill="none" stroke="#65756b" stroke-width="5"/><path d="M945 692 V716" fill="none" stroke="#856a6a" stroke-width="5"/>
+    <path d="M555 716 l-12 -16 h24 z" fill="#65756b" stroke="none"/><path d="M945 716 l-12 -16 h24 z" fill="#856a6a" stroke="none"/>
+
+    <text x="750" y="812" text-anchor="middle" font-size="25" stroke="none">AI recommends → Backend orchestrates → Operator approves</text>
+  </g>
+</svg>
