@@ -141,6 +141,10 @@ The AI can provide evidence and an advisory. The backend controls workflow. The 
 
 When a disruption occurs, SETU converts it into a structured decision process.
 
+![SETU AI Route Decision Pipeline](docs/diagrams/setu-ai-route-decision-pipeline.svg)
+
+*Route decision pipeline: sense → assess → generate → score/rank → ML advisory → human approval.*
+
 ```mermaid
 flowchart TD
     A[Incident / Weather / Field Alert] --> B[Network Impact]
@@ -313,11 +317,11 @@ Conceptually:
 
 ```text
 Route Score =
-    ETA Utility          × 30/95
-  + Risk Utility         × 20/95
-  + Accessibility Utility× 20/95
-  + Distance Utility     × 15/95
-  + Vehicle Utility      × 10/95
+    ETA Utility           × 30/95
+  + Risk Utility          × 20/95
+  + Accessibility Utility × 20/95
+  + Distance Utility      × 15/95
+  + Vehicle Utility       × 10/95
 ```
 
 For cost factors such as ETA, risk and distance, **lower is better**. For benefit factors such as accessibility and vehicle compatibility, **higher is better**.
@@ -459,6 +463,10 @@ flowchart LR
 SETU's AI layer is intentionally **not an autonomous route controller**.
 
 It consists of a deterministic intelligence foundation plus a supervised ML disruption-assessment component.
+
+![SETU AI Architecture](docs/diagrams/setu-ai-architecture.svg)
+
+*AI architecture: operational context flows through deterministic intelligence and ML advisory before explanation and human approval.*
 
 ### Deterministic intelligence is the operational foundation
 
@@ -700,6 +708,10 @@ The ML output is therefore **supporting evidence**, not an automatic route-chang
 ## 10. Secure AI Processing — Trusted Execution Environment
 
 SETU is designed with a **Trusted Execution Environment (TEE)** as a security boundary for sensitive AI processing.
+
+![SETU TEE Architecture](docs/diagrams/setu-tee-architecture.svg)
+
+*Planned TEE boundary for protecting sensitive AI inference data-in-use.*
 
 ### What is a TEE?
 
@@ -946,6 +958,10 @@ flowchart TB
     OPS --> WEB
     OPS --> MOB
 ```
+
+![SETU AI Architecture](docs/diagrams/setu-ai-architecture.svg)
+
+*Handwritten-style AI architecture overview for presentation and documentation.*
 
 ### Application / control layer
 
