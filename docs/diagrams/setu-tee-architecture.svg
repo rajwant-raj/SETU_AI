@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560">
+<rect width="1400" height="560" fill="#fbfaf7"/>
+<g font-family="Comic Sans MS, Segoe Print, cursive" fill="#20252b" stroke="#20252b" stroke-width="3">
+<text x="700" y="58" text-anchor="middle" font-size="38" font-weight="700" stroke="none">SETU — TEE ARCHITECTURE (PLANNED)</text>
+<text x="700" y="90" text-anchor="middle" font-size="21" stroke="none">Secure AI inference for sensitive logistics data</text>
+<rect x="35" y="185" width="300" height="220" rx="28" fill="#e7eef3"/>
+<text x="185" y="235" text-anchor="middle" font-size="27" font-weight="700" stroke="none">SENSITIVE DATA</text>
+<text x="185" y="275" text-anchor="middle" font-size="19" stroke="none">Shipment • Vehicle</text><text x="185" y="306" text-anchor="middle" font-size="19" stroke="none">Route • Incident • GPS</text>
+<path d="M335 295 H405" fill="none" stroke="#4b5563" stroke-width="6"/><path d="M405 295 l-18 -12 v24 z" fill="#4b5563" stroke="none"/><text x="370" y="265" text-anchor="middle" font-size="17" stroke="none">protected input</text>
+<rect x="420" y="135" width="560" height="320" rx="34" fill="#f7f7f2" stroke="#6c8b73" stroke-dasharray="12 9" stroke-width="5"/>
+<text x="700" y="185" text-anchor="middle" font-size="28" font-weight="700" stroke="none">TRUSTED EXECUTION ENVIRONMENT</text>
+<text x="700" y="215" text-anchor="middle" font-size="18" stroke="none">isolated • encrypted • attested</text>
+<rect x="555" y="245" width="290" height="135" rx="25" fill="#e4f0df"/>
+<text x="700" y="292" text-anchor="middle" font-size="25" font-weight="700" stroke="none">SETU AI MODEL</text>
+<text x="700" y="325" text-anchor="middle" font-size="18" stroke="none">Protected inference</text>
+<text x="700" y="353" text-anchor="middle" font-size="16" stroke="none">Attestation + secret policy</text>
+<path d="M980 295 H1050" fill="none" stroke="#4b5563" stroke-width="6"/><path d="M1050 295 l-18 -12 v24 z" fill="#4b5563" stroke="none"/><text x="1015" y="265" text-anchor="middle" font-size="17" stroke="none">verified result</text>
+<rect x="1065" y="185" width="300" height="220" rx="28" fill="#f4eadc"/>
+<text x="1215" y="235" text-anchor="middle" font-size="27" font-weight="700" stroke="none">ROUTE DECISION</text>
+<text x="1215" y="275" text-anchor="middle" font-size="19" stroke="none">Risk • ETA • Alternatives</text><text x="1215" y="306" text-anchor="middle" font-size="19" stroke="none">Explanation</text><text x="1215" y="355" text-anchor="middle" font-size="19" stroke="none">Operator / Admin approval</text>
+<path d="M185 455 Q700 520 1215 455" fill="none" stroke="#9aa7b3" stroke-width="3"/>
+<text x="700" y="520" text-anchor="middle" font-size="20" stroke="none">TEE protects data-in-use; it does not give the AI operational authority.</text>
+</g></svg>
