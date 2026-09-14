@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1000" viewBox="0 0 760 1000">
+<rect width="760" height="1000" fill="#fbfaf7"/>
+<g font-family="Comic Sans MS, Segoe Print, cursive" fill="#20252b" stroke="#20252b" stroke-width="2">
+<text x="380" y="52" text-anchor="middle" font-size="34" font-weight="700" stroke="none">SETU — AI ARCHITECTURE</text>
+<text x="380" y="82" text-anchor="middle" font-size="18" stroke="none">AI advisory + deterministic decision layer + human approval</text>
+<rect x="255" y="115" width="250" height="80" rx="20" fill="#f4eee3"/>
+<text x="380" y="150" text-anchor="middle" font-size="27" font-weight="700" stroke="none">SETU.NER</text>
+<text x="380" y="178" text-anchor="middle" font-size="17" stroke="none">Admin • Operator • Field Agent</text>
+<path d="M380 195 V235" fill="none" stroke="#4b5563" stroke-width="5"/><path d="M380 235 l-11 -16 h22 z" fill="#4b5563" stroke="none"/>
+<rect x="170" y="245" width="420" height="165" rx="24" fill="#f7f5f0"/>
+<text x="380" y="280" text-anchor="middle" font-size="27" font-weight="700" stroke="none">LOGISTICS CONTEXT</text>
+<text x="220" y="318" font-size="20" stroke="none">• Shipment • Vehicle • Route</text>
+<text x="220" y="348" font-size="20" stroke="none">• GPS • Weather • Incidents</text>
+<text x="220" y="378" font-size="20" stroke="none">• Risk • Route segments</text>
+<path d="M380 410 V450" fill="none" stroke="#4b5563" stroke-width="5"/><path d="M380 450 l-11 -16 h22 z" fill="#4b5563" stroke="none"/>
+<rect x="135" y="460" width="490" height="150" rx="24" fill="#e8f0e4"/>
+<text x="380" y="498" text-anchor="middle" font-size="27" font-weight="700" stroke="none">INTELLIGENCE LAYER</text>
+<text x="380" y="532" text-anchor="middle" font-size="19" stroke="none">Risk • Accessibility • ETA • Network Impact</text>
+<text x="380" y="562" text-anchor="middle" font-size="19" stroke="none">Route Generation • Route Ranking</text>
+<text x="380" y="592" text-anchor="middle" font-size="19" stroke="none">ML Disruption Advisory</text>
+<path d="M380 610 V650" fill="none" stroke="#4b5563" stroke-width="5"/><path d="M380 650 l-11 -16 h22 z" fill="#4b5563" stroke="none"/>
+<rect x="195" y="660" width="370" height="105" rx="22" fill="#eee6f2"/>
+<text x="380" y="700" text-anchor="middle" font-size="27" font-weight="700" stroke="none">EXPLANATION</text>
+<text x="380" y="732" text-anchor="middle" font-size="18" stroke="none">Why this route? What are the trade-offs?</text>
+<path d="M380 765 V805" fill="none" stroke="#4b5563" stroke-width="5"/><path d="M380 805 l-11 -16 h22 z" fill="#4b5563" stroke="none"/>
+<rect x="170" y="815" width="420" height="105" rx="22" fill="#f7e5dc"/>
+<text x="380" y="855" text-anchor="middle" font-size="27" font-weight="700" stroke="none">HUMAN APPROVAL</text>
+<text x="380" y="888" text-anchor="middle" font-size="18" stroke="none">Approve → reroute     Reject → keep route</text>
+<text x="380" y="965" text-anchor="middle" font-size="22" font-weight="700" stroke="none">AI recommends → Human decides</text>
+</g></svg>
